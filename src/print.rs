@@ -10,6 +10,8 @@ enum Mode {
     Break,
 }
 
+type Action<'a> = (usize, Mode, &'a Doc<'a>);
+
 /// Pretty print a doc.
 ///
 /// ## Panics
@@ -82,16 +84,17 @@ pub fn print(doc: &Doc, options: &PrintOptions) -> Result<String, fmt::Error> {
                     actions.extend(docs.iter().map(|doc| (indent, Mode::Flat, doc)).rev());
                 }
                 Mode::Break => {
-                    let fitting_actions = actions
+                    let fitting_actions = docs
                         .iter()
-                        .cloned()
-                        .chain(docs.iter().map(|doc| (indent, Mode::Flat, doc)).rev())
+                        .map(|doc| (indent, Mode::Flat, doc))
+                        .rev()
                         .collect();
-                    let mode = if fitting(fitting_actions, cols, options.width) {
-                        Mode::Flat
-                    } else {
-                        Mode::Break
-                    };
+                    let mode =
+                        if fitting(fitting_actions, actions.iter().rev(), cols, options.width) {
+                            Mode::Flat
+                        } else {
+                            Mode::Break
+                        };
                     actions.extend(docs.iter().map(|doc| (indent, mode, doc)).rev());
                 }
             },
@@ -110,8 +113,13 @@ pub fn print(doc: &Doc, options: &PrintOptions) -> Result<String, fmt::Error> {
 /// it just simply attempts to put the whole group and the rest actions into current line.
 /// After that, if current column is still less than width limitation,
 /// we can feel sure that this group can be put on current line without line breaks.
-fn fitting(mut actions: Vec<(usize, Mode, &Doc)>, mut cols: usize, width: usize) -> bool {
-    while let Some((indent, mode, doc)) = actions.pop() {
+fn fitting<'a>(
+    mut actions: Vec<Action<'a>>,
+    mut best_actions: impl Iterator<Item = &'a Action<'a>>,
+    mut cols: usize,
+    width: usize,
+) -> bool {
+    while let Some((indent, mode, doc)) = actions.pop().or_else(|| best_actions.next().copied()) {
         match doc {
             Doc::Nil => {}
             Doc::Alt(doc_flat, doc_break) => match mode {
