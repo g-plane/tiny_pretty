@@ -86,7 +86,7 @@ impl<'a> Doc<'a> {
     /// ```
     /// use tiny_pretty::{print, Doc, LineBreak, PrintOptions};
     ///
-    /// let doc = Doc::hardline();
+    /// let doc = Doc::hard_line();
     /// assert_eq!("\n", &print(&doc, &Default::default()).unwrap());
     /// assert_eq!("\r\n", &print(&doc, &PrintOptions {
     ///     line_break: LineBreak::Crlf,
@@ -94,7 +94,7 @@ impl<'a> Doc<'a> {
     /// }).unwrap());
     /// ```
     #[inline]
-    pub fn hardline() -> Doc<'a> {
+    pub fn hard_line() -> Doc<'a> {
         Doc::NewLine
     }
 
@@ -113,9 +113,9 @@ impl<'a> Doc<'a> {
     ///     &print(
     ///         &Doc::list(vec![
     ///             Doc::text("aaaa"),
-    ///             Doc::softline(),
+    ///             Doc::soft_line(),
     ///             Doc::text("bbbb"),
-    ///             Doc::softline(),
+    ///             Doc::soft_line(),
     ///             Doc::text("cccc"),
     ///         ]).group(),
     ///         &options,
@@ -136,11 +136,11 @@ impl<'a> Doc<'a> {
     /// );
     /// ```
     #[inline]
-    pub fn softline() -> Doc<'a> {
+    pub fn soft_line() -> Doc<'a> {
         Doc::Group(vec![Doc::Break(1, 0)])
     }
 
-    /// "Empty line" is simliar to [`hardline`](Doc::hardline) but it won't be
+    /// "Empty line" is simliar to [`hard_line`](Doc::hard_line) but it won't be
     /// affected by indentation. That is, it always prints an empty line without
     /// spaces or tabs indented.
     ///
@@ -157,7 +157,7 @@ impl<'a> Doc<'a> {
     /// assert_eq!(
     ///     "\n ",
     ///     &print(
-    ///         &Doc::hardline().nest(1),
+    ///         &Doc::hard_line().nest(1),
     ///         &Default::default(),
     ///     ).unwrap(),
     /// );
@@ -332,7 +332,7 @@ impl<'a> Doc<'a> {
     /// they will be checked if those docs can be put on a single line.
     /// If they can't, it may insert line breaks according to the
     /// [`line_or_space`](Doc::line_or_space), [`line_or_nil`](Doc::line_or_nil)
-    /// or [`softline`](Doc::softline) calls in the group.
+    /// or [`soft_line`](Doc::soft_line) calls in the group.
     /// (Also, please read examples of those functions for usage of `group`.)
     ///
     /// Calling this on text won’t take any effects.
@@ -380,7 +380,7 @@ impl<'a> Doc<'a> {
     /// ```
     /// use tiny_pretty::{print, Doc};
     ///
-    /// let doc = Doc::hardline().nest(2);
+    /// let doc = Doc::hard_line().nest(2);
     /// assert_eq!("\n  ", &print(&doc, &Default::default()).unwrap());
     ///
     /// let doc = Doc::text("code").nest(2);

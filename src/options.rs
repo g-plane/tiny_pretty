@@ -22,7 +22,7 @@ pub struct PrintOptions {
     /// ```
     /// use tiny_pretty::{print, Doc, LineBreak, PrintOptions};
     ///
-    /// let doc = Doc::list(vec![Doc::text("a"), Doc::hardline(), Doc::text("b")]);
+    /// let doc = Doc::list(vec![Doc::text("a"), Doc::hard_line(), Doc::text("b")]);
     ///
     /// assert_eq!("a\nb", &print(&doc, &PrintOptions {
     ///     line_break: LineBreak::Lf,
@@ -51,7 +51,7 @@ pub struct PrintOptions {
     /// ```
     /// use tiny_pretty::{print, Doc, IndentKind, PrintOptions};
     ///
-    /// let doc = Doc::list(vec![Doc::text("a"), Doc::hardline().nest(2), Doc::text("b")]);
+    /// let doc = Doc::list(vec![Doc::text("a"), Doc::hard_line().nest(2), Doc::text("b")]);
     ///
     /// assert_eq!("a\n  b", &print(&doc, &PrintOptions {
     ///     indent_kind: IndentKind::Space,
@@ -108,7 +108,7 @@ pub struct PrintOptions {
     /// ```
     /// use tiny_pretty::{print, Doc, IndentKind, PrintOptions};
     ///
-    /// let doc = Doc::list(vec![Doc::text("aaaa"), Doc::hardline(), Doc::text("bbbb")])
+    /// let doc = Doc::list(vec![Doc::text("aaaa"), Doc::hard_line(), Doc::text("bbbb")])
     ///     .group()
     ///     .nest(8);
     ///
