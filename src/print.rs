@@ -111,7 +111,6 @@ pub fn print(doc: &Doc, options: &PrintOptions) -> Result<String, fmt::Error> {
 /// After that, if current column is still less than width limitation,
 /// we can feel sure that this group can be put on current line without line breaks.
 fn fitting(mut actions: Vec<(usize, Mode, &Doc)>, mut cols: usize, width: usize) -> bool {
-    let mut fit = true;
     while let Some((indent, mode, doc)) = actions.pop() {
         match doc {
             Doc::Nil => {}
@@ -127,15 +126,9 @@ fn fitting(mut actions: Vec<(usize, Mode, &Doc)>, mut cols: usize, width: usize)
             }
             Doc::Break(spaces, _) => match mode {
                 Mode::Flat => cols += spaces,
-                Mode::Break => {
-                    fit = true;
-                    cols = indent;
-                }
+                Mode::Break => return true,
             },
-            Doc::NewLine => {
-                fit = true;
-                cols = indent;
-            }
+            Doc::NewLine => return true,
             Doc::EmptyLine => {}
             Doc::Group(docs) | Doc::List(docs) => {
                 actions.extend(docs.iter().map(|doc| (indent, mode, doc)).rev());
@@ -145,7 +138,7 @@ fn fitting(mut actions: Vec<(usize, Mode, &Doc)>, mut cols: usize, width: usize)
             return false;
         }
     }
-    fit
+    true
 }
 
 #[cfg(not(feature = "unicode-width"))]
