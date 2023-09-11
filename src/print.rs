@@ -55,6 +55,9 @@ pub fn print(doc: &Doc, options: &PrintOptions) -> Result<String, fmt::Error> {
                     )?,
                 }
             }
+            Doc::EmptyLine => {
+                out.push_str(line_break);
+            }
             Doc::Break(spaces, offset) => match mode {
                 Mode::Flat => {
                     cols += spaces;
@@ -133,6 +136,7 @@ fn fitting(mut actions: Vec<(usize, Mode, &Doc)>, mut cols: usize, width: usize)
                 fit = true;
                 cols = indent;
             }
+            Doc::EmptyLine => {}
             Doc::Group(docs) | Doc::List(docs) => {
                 actions.extend(docs.iter().map(|doc| (indent, mode, doc)).rev());
             }

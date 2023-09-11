@@ -23,6 +23,9 @@ pub enum Doc<'a> {
     #[doc(hidden)]
     NewLine,
 
+    #[doc(hidden)]
+    EmptyLine,
+
     /// The first component is the number of spaces if it can be put on a single line;
     /// the second component is the number of offset if it will be broken into different lines.
     #[doc(hidden)]
@@ -135,6 +138,33 @@ impl<'a> Doc<'a> {
     #[inline]
     pub fn softline() -> Doc<'a> {
         Doc::Group(vec![Doc::Break(1, 0)])
+    }
+
+    /// "Empty line" is simliar to [`hardline`](Doc::hardline) but it won't be
+    /// affected by indentation. That is, it always prints an empty line without
+    /// spaces or tabs indented.
+    ///
+    /// ```
+    /// use tiny_pretty::{print, Doc, PrintOptions};
+    ///
+    /// assert_eq!(
+    ///     "\n",
+    ///     &print(
+    ///         &Doc::empty_line().nest(1),
+    ///         &Default::default(),
+    ///     ).unwrap(),
+    /// );
+    /// assert_eq!(
+    ///     "\n ",
+    ///     &print(
+    ///         &Doc::hardline().nest(1),
+    ///         &Default::default(),
+    ///     ).unwrap(),
+    /// );
+    /// ```
+    #[inline]
+    pub fn empty_line() -> Doc<'a> {
+        Doc::EmptyLine
     }
 
     /// Create a list of docs.
