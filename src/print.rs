@@ -2,7 +2,6 @@ use crate::{
     options::{LineBreak, PrintOptions},
     Doc, IndentKind,
 };
-use std::fmt::{self, Write};
 
 #[derive(Clone, Copy, Debug)]
 enum Mode {
@@ -17,7 +16,7 @@ type Action<'a> = (usize, Mode, &'a Doc<'a>);
 /// ## Panics
 ///
 /// Panics if `options.tab_size` is `0`.
-pub fn print(doc: &Doc, options: &PrintOptions) -> Result<String, fmt::Error> {
+pub fn print(doc: &Doc, options: &PrintOptions) -> String {
     assert!(options.tab_size > 0);
 
     let line_break = match options.line_break {
@@ -46,15 +45,15 @@ pub fn print(doc: &Doc, options: &PrintOptions) -> Result<String, fmt::Error> {
             }
             Doc::NewLine => {
                 cols = indent;
+                out.push_str(line_break);
                 match options.indent_kind {
-                    IndentKind::Space => write!(out, "{line_break}{:indent$}", "")?,
-                    IndentKind::Tab => write!(
-                        out,
-                        "{line_break}{0:\t<tabs$}{0:<spaces$}",
-                        "",
-                        tabs = indent / options.tab_size,
-                        spaces = indent % options.tab_size
-                    )?,
+                    IndentKind::Space => {
+                        out.push_str(&" ".repeat(indent));
+                    }
+                    IndentKind::Tab => {
+                        out.push_str(&"\t".repeat(indent / options.tab_size));
+                        out.push_str(&" ".repeat(indent % options.tab_size));
+                    }
                 }
             }
             Doc::EmptyLine => {
@@ -63,19 +62,19 @@ pub fn print(doc: &Doc, options: &PrintOptions) -> Result<String, fmt::Error> {
             Doc::Break(spaces, offset) => match mode {
                 Mode::Flat => {
                     cols += spaces;
-                    write!(out, "{:spaces$}", "")?;
+                    out.push_str(&" ".repeat(*spaces));
                 }
                 Mode::Break => {
                     cols = indent + offset;
+                    out.push_str(line_break);
                     match options.indent_kind {
-                        IndentKind::Space => write!(out, "{line_break}{:cols$}", "")?,
-                        IndentKind::Tab => write!(
-                            out,
-                            "{line_break}{0:\t<tabs$}{0:<spaces$}",
-                            "",
-                            tabs = cols / options.tab_size,
-                            spaces = cols % options.tab_size
-                        )?,
+                        IndentKind::Space => {
+                            out.push_str(&" ".repeat(cols));
+                        }
+                        IndentKind::Tab => {
+                            out.push_str(&"\t".repeat(cols / options.tab_size));
+                            out.push_str(&" ".repeat(cols % options.tab_size));
+                        }
                     }
                 }
             },
@@ -104,7 +103,7 @@ pub fn print(doc: &Doc, options: &PrintOptions) -> Result<String, fmt::Error> {
         }
     }
 
-    Ok(out)
+    out
 }
 
 /// Check if a group can be placed on single line.
