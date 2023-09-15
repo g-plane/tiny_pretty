@@ -27,12 +27,12 @@ pub struct PrintOptions {
     /// assert_eq!("a\nb", &print(&doc, &PrintOptions {
     ///     line_break: LineBreak::Lf,
     ///     ..Default::default()
-    /// }).unwrap());
+    /// }));
     ///
     /// assert_eq!("a\r\nb", &print(&doc, &PrintOptions {
     ///     line_break: LineBreak::Crlf,
     ///     ..Default::default()
-    /// }).unwrap());
+    /// }));
     /// ```
     pub line_break: LineBreak,
 
@@ -56,12 +56,12 @@ pub struct PrintOptions {
     /// assert_eq!("a\n  b", &print(&doc, &PrintOptions {
     ///     indent_kind: IndentKind::Space,
     ///     ..Default::default()
-    /// }).unwrap());
+    /// }));
     ///
     /// assert_eq!("a\n\tb", &print(&doc, &PrintOptions {
     ///     indent_kind: IndentKind::Tab,
     ///     ..Default::default()
-    /// }).unwrap());
+    /// }));
     /// ```
     pub indent_kind: IndentKind,
 
@@ -78,19 +78,19 @@ pub struct PrintOptions {
     /// assert_eq!("aaaa\nbbbb", &print(&doc, &PrintOptions {
     ///     width: 5,
     ///     ..Default::default()
-    /// }).unwrap());
+    /// }));
     ///
     /// assert_eq!("aaaa bbbb", &print(&doc, &PrintOptions {
     ///     width: 20,
     ///     ..Default::default()
-    /// }).unwrap());
+    /// }));
     ///
     /// let doc = Doc::list(vec![Doc::text("aaaaaaaa"), Doc::line_or_space(), Doc::text("bbbbbbbb")])
     ///     .group();
     /// assert_eq!("aaaaaaaa\nbbbbbbbb", &print(&doc, &PrintOptions {
     ///     width: 5,
     ///     ..Default::default()
-    /// }).unwrap());
+    /// }));
     /// ```
     pub width: usize,
 
@@ -116,19 +116,19 @@ pub struct PrintOptions {
     ///     indent_kind: IndentKind::Tab,
     ///     tab_size: 5,
     ///     ..Default::default()
-    /// }).unwrap());
+    /// }));
     ///
     /// assert_eq!("aaaa\n\t\tbbbb", &print(&doc, &PrintOptions {
     ///     indent_kind: IndentKind::Tab,
     ///     tab_size: 4,
     ///     ..Default::default()
-    /// }).unwrap());
+    /// }));
     ///
     /// assert_eq!("aaaa\n        bbbb", &print(&doc, &PrintOptions {
     ///     indent_kind: IndentKind::Space,
     ///     tab_size: 5,
     ///     ..Default::default()
-    /// }).unwrap());
+    /// }));
     /// ```
     pub tab_size: usize,
 }

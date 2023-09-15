@@ -43,10 +43,10 @@ impl<'a> Doc<'a> {
     /// use tiny_pretty::{print, Doc};
     ///
     /// let doc = Doc::text("code");
-    /// assert_eq!("code", &print(&doc, &Default::default()).unwrap());
+    /// assert_eq!("code", &print(&doc, &Default::default()));
     ///
     /// let doc = Doc::text(String::from("code"));
-    /// assert_eq!("code", &print(&doc, &Default::default()).unwrap());
+    /// assert_eq!("code", &print(&doc, &Default::default()));
     /// ```
     #[inline]
     pub fn text(s: impl Into<Cow<'a, str>>) -> Doc<'a> {
@@ -59,7 +59,7 @@ impl<'a> Doc<'a> {
     /// use tiny_pretty::{print, Doc};
     ///
     /// let doc = Doc::nil();
-    /// assert!(print(&doc, &Default::default()).unwrap().is_empty());
+    /// assert!(print(&doc, &Default::default()).is_empty());
     /// ```
     #[inline]
     pub fn nil() -> Doc<'a> {
@@ -72,7 +72,7 @@ impl<'a> Doc<'a> {
     /// use tiny_pretty::{print, Doc};
     ///
     /// let doc = Doc::space();
-    /// assert_eq!(" ", &print(&doc, &Default::default()).unwrap());
+    /// assert_eq!(" ", &print(&doc, &Default::default()));
     /// ```
     #[inline]
     pub fn space() -> Doc<'a> {
@@ -85,11 +85,11 @@ impl<'a> Doc<'a> {
     /// use tiny_pretty::{print, Doc, LineBreak, PrintOptions};
     ///
     /// let doc = Doc::hard_line();
-    /// assert_eq!("\n", &print(&doc, &Default::default()).unwrap());
+    /// assert_eq!("\n", &print(&doc, &Default::default()));
     /// assert_eq!("\r\n", &print(&doc, &PrintOptions {
     ///     line_break: LineBreak::Crlf,
     ///     ..Default::default()
-    /// }).unwrap());
+    /// }));
     /// ```
     #[inline]
     pub fn hard_line() -> Doc<'a> {
@@ -117,7 +117,7 @@ impl<'a> Doc<'a> {
     ///             Doc::text("cccc"),
     ///         ]).group(),
     ///         &options,
-    ///     ).unwrap(),
+    ///     ),
     /// );
     /// assert_eq!(
     ///     "aaaa\nbbbb\ncccc",
@@ -130,7 +130,7 @@ impl<'a> Doc<'a> {
     ///             Doc::text("cccc"),
     ///         ]).group(),
     ///         &options,
-    ///     ).unwrap(),
+    ///     ),
     /// );
     /// ```
     #[inline]
@@ -150,14 +150,14 @@ impl<'a> Doc<'a> {
     ///     &print(
     ///         &Doc::empty_line().nest(1),
     ///         &Default::default(),
-    ///     ).unwrap(),
+    ///     ),
     /// );
     /// assert_eq!(
     ///     "\n ",
     ///     &print(
     ///         &Doc::hard_line().nest(1),
     ///         &Default::default(),
-    ///     ).unwrap(),
+    ///     ),
     /// );
     /// ```
     #[inline]
@@ -171,7 +171,7 @@ impl<'a> Doc<'a> {
     /// use tiny_pretty::{print, Doc};
     ///
     /// let doc = Doc::list(vec![Doc::text("a"), Doc::text("b"), Doc::text("c")]);
-    /// assert_eq!("abc", &print(&doc, &Default::default()).unwrap());
+    /// assert_eq!("abc", &print(&doc, &Default::default()));
     /// ```
     #[inline]
     pub fn list(l: Vec<Doc<'a>>) -> Doc<'a> {
@@ -197,7 +197,7 @@ impl<'a> Doc<'a> {
     ///             Doc::text("cccc"),
     ///         ]).group(),
     ///         &options,
-    ///     ).unwrap(),
+    ///     ),
     /// );
     /// assert_eq!(
     ///     "a b",
@@ -208,7 +208,7 @@ impl<'a> Doc<'a> {
     ///             Doc::text("b"),
     ///         ]).group(),
     ///         &options,
-    ///     ).unwrap(),
+    ///     ),
     /// );
     ///
     /// assert_eq!(
@@ -220,7 +220,7 @@ impl<'a> Doc<'a> {
     ///             Doc::text("b"),
     ///         ]), // <-- no grouping here
     ///         &options,
-    ///     ).unwrap(),
+    ///     ),
     /// );
     /// ```
     #[inline]
@@ -245,7 +245,7 @@ impl<'a> Doc<'a> {
     ///             Doc::text("arg"),
     ///         ]).group(),
     ///         &options,
-    ///     ).unwrap(),
+    ///     ),
     /// );
     /// assert_eq!(
     ///     "f(arg",
@@ -256,7 +256,7 @@ impl<'a> Doc<'a> {
     ///             Doc::text("arg"),
     ///         ]).group(),
     ///         &options,
-    ///     ).unwrap(),
+    ///     ),
     /// );
     ///
     /// assert_eq!(
@@ -268,7 +268,7 @@ impl<'a> Doc<'a> {
     ///             Doc::text("arg"),
     ///         ]), // <-- no grouping here
     ///         &options,
-    ///     ).unwrap(),
+    ///     ),
     /// );
     /// ```
     #[inline]
@@ -296,12 +296,12 @@ impl<'a> Doc<'a> {
     /// assert_eq!("function(\narg,\n)", &print(&doc, &PrintOptions {
     ///     width: 10,
     ///     ..Default::default()
-    /// }).unwrap());
+    /// }));
     ///
     /// assert_eq!("function(arg)", &print(&doc, &PrintOptions {
     ///     width: 20,
     ///     ..Default::default()
-    /// }).unwrap());
+    /// }));
     ///
     ///
     ///
@@ -317,7 +317,7 @@ impl<'a> Doc<'a> {
     /// assert_eq!("function(\narg,\n)", &print(&doc, &PrintOptions {
     ///     width: 20,
     ///     ..Default::default()
-    /// }).unwrap());
+    /// }));
     /// ```
     #[inline]
     pub fn flat_or_break(doc_flat: Doc<'a>, doc_break: Doc<'a>) -> Doc<'a> {
@@ -339,7 +339,7 @@ impl<'a> Doc<'a> {
     /// use tiny_pretty::{print, Doc};
     ///
     /// let doc = Doc::text("code").group();
-    /// assert_eq!("code", &print(&doc, &Default::default()).unwrap());
+    /// assert_eq!("code", &print(&doc, &Default::default()));
     /// ```
     #[inline]
     pub fn group(self) -> Doc<'a> {
@@ -356,7 +356,7 @@ impl<'a> Doc<'a> {
     /// use tiny_pretty::{print, Doc};
     ///
     /// let doc = Doc::text("a").append(Doc::text("b")).append(Doc::text("c"));
-    /// assert_eq!("abc", &print(&doc, &Default::default()).unwrap());
+    /// assert_eq!("abc", &print(&doc, &Default::default()));
     /// ```
     #[inline]
     pub fn append(self, other: Doc<'a>) -> Doc<'a> {
@@ -378,7 +378,7 @@ impl<'a> Doc<'a> {
     /// use tiny_pretty::{print, Doc};
     ///
     /// let doc = Doc::text("a").concat(vec![Doc::text("b"), Doc::text("c")].into_iter());
-    /// assert_eq!("abc", &print(&doc, &Default::default()).unwrap());
+    /// assert_eq!("abc", &print(&doc, &Default::default()));
     /// ```
     #[inline]
     pub fn concat(self, iter: impl Iterator<Item = Doc<'a>>) -> Doc<'a> {
@@ -398,10 +398,10 @@ impl<'a> Doc<'a> {
     /// use tiny_pretty::{print, Doc};
     ///
     /// let doc = Doc::hard_line().nest(2);
-    /// assert_eq!("\n  ", &print(&doc, &Default::default()).unwrap());
+    /// assert_eq!("\n  ", &print(&doc, &Default::default()));
     ///
     /// let doc = Doc::text("code").nest(2);
-    /// assert_eq!("code", &print(&doc, &Default::default()).unwrap());
+    /// assert_eq!("code", &print(&doc, &Default::default()));
     /// ```
     #[inline]
     pub fn nest(self, size: usize) -> Doc<'a> {
