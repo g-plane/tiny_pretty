@@ -350,7 +350,7 @@ impl<'a> Doc<'a> {
         }
     }
 
-    /// Concat two docs.
+    /// Join two docs.
     ///
     /// ```
     /// use tiny_pretty::{print, Doc};
@@ -369,6 +369,25 @@ impl<'a> Doc<'a> {
             Doc::List(mut docs) => current.append(&mut docs),
             _ => current.push(other),
         }
+        Doc::List(current)
+    }
+
+    /// Concatenate an iterator whose items are docs.
+    ///
+    /// ```
+    /// use tiny_pretty::{print, Doc};
+    ///
+    /// let doc = Doc::text("a").concat(vec![Doc::text("b"), Doc::text("c")].into_iter());
+    /// assert_eq!("abc", &print(&doc, &Default::default()).unwrap());
+    /// ```
+    #[inline]
+    pub fn concat(self, iter: impl Iterator<Item = Doc<'a>>) -> Doc<'a> {
+        let mut current = if let Doc::List(docs) = self {
+            docs
+        } else {
+            vec![self]
+        };
+        current.extend(iter);
         Doc::List(current)
     }
 
