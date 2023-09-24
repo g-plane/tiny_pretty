@@ -406,7 +406,19 @@ impl<'a> Doc<'a> {
     /// assert_eq!("code", &print(&doc, &Default::default()));
     /// ```
     #[inline]
-    pub fn nest(self, size: usize) -> Doc<'a> {
-        Doc::Nest(size, Box::new(self))
+    pub fn nest(mut self, size: usize) -> Doc<'a> {
+        match &mut self {
+            Doc::Break(_, offset) => {
+                *offset += size;
+                self
+            }
+            Doc::Group(docs) => {
+                if let [Doc::Break(_, offset)] = &mut docs[..] {
+                    *offset += size;
+                }
+                self
+            }
+            _ => Doc::Nest(size, Box::new(self)),
+        }
     }
 }
