@@ -92,6 +92,14 @@ impl<'a> Doc<'a> {
     ///     line_break: LineBreak::Crlf,
     ///     ..Default::default()
     /// }));
+    ///
+    /// // There's a `hard_line` call inside a group,
+    /// // so the group always breaks even it doesn't exceed the width limitation.
+    /// let doc = Doc::text("fn(")
+    ///     .append(Doc::line_or_space())
+    ///     .append(Doc::hard_line())
+    ///     .group();
+    /// assert_eq!("fn(\n\n", &print(&doc, &Default::default()));
     /// ```
     #[inline]
     pub fn hard_line() -> Doc<'a> {

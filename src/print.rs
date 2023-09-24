@@ -135,7 +135,10 @@ fn fitting<'a>(
                 Mode::Flat => cols += spaces,
                 Mode::Break => return true,
             },
-            Doc::NewLine => return true,
+            Doc::NewLine => {
+                // https://github.com/Marwes/pretty.rs/blob/83021205d557d77731d404cd40b37b105ab762c7/src/render.rs#L381
+                return matches!(mode, Mode::Break);
+            }
             Doc::EmptyLine => {}
             Doc::Group(docs) | Doc::List(docs) => {
                 actions.extend(docs.iter().map(|doc| (indent, mode, doc)).rev());
