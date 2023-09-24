@@ -26,8 +26,10 @@ pub enum Doc<'a> {
     #[doc(hidden)]
     EmptyLine,
 
+    /// The first component is the number of spaces if it can be put on a single line;
+    /// the second component is the number of offset if it will be broken into different lines.
     #[doc(hidden)]
-    Break(usize),
+    Break(usize, usize),
 
     #[doc(hidden)]
     Group(Vec<Doc<'a>>),
@@ -135,7 +137,7 @@ impl<'a> Doc<'a> {
     /// ```
     #[inline]
     pub fn soft_line() -> Doc<'a> {
-        Doc::Group(vec![Doc::Break(1)])
+        Doc::Group(vec![Doc::Break(1, 0)])
     }
 
     /// "Empty line" is simliar to [`hard_line`](Doc::hard_line) but it won't be
@@ -225,7 +227,7 @@ impl<'a> Doc<'a> {
     /// ```
     #[inline]
     pub fn line_or_space() -> Doc<'a> {
-        Doc::Break(1)
+        Doc::Break(1, 0)
     }
 
     /// Print nothing if doc can be put on a single line, otherwise print a line break.
@@ -273,7 +275,7 @@ impl<'a> Doc<'a> {
     /// ```
     #[inline]
     pub fn line_or_nil() -> Doc<'a> {
-        Doc::Break(0)
+        Doc::Break(0, 0)
     }
 
     /// Apply `doc_flat` when it can be put on a single line,

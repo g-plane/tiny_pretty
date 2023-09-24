@@ -59,13 +59,13 @@ pub fn print(doc: &Doc, options: &PrintOptions) -> String {
             Doc::EmptyLine => {
                 out.push_str(line_break);
             }
-            Doc::Break(spaces) => match mode {
+            Doc::Break(spaces, offset) => match mode {
                 Mode::Flat => {
                     cols += spaces;
                     out.push_str(&" ".repeat(*spaces));
                 }
                 Mode::Break => {
-                    cols = indent;
+                    cols = indent + offset;
                     out.push_str(line_break);
                     match options.indent_kind {
                         IndentKind::Space => {
@@ -131,7 +131,7 @@ fn fitting<'a>(
             Doc::Text(text) => {
                 cols += measure_text_width(text);
             }
-            Doc::Break(spaces) => match mode {
+            Doc::Break(spaces, _) => match mode {
                 Mode::Flat => cols += spaces,
                 Mode::Break => return true,
             },
