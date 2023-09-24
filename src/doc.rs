@@ -407,18 +407,11 @@ impl<'a> Doc<'a> {
     /// ```
     #[inline]
     pub fn nest(mut self, size: usize) -> Doc<'a> {
-        match &mut self {
-            Doc::Break(_, offset) => {
-                *offset += size;
-                self
-            }
-            Doc::Group(docs) => {
-                if let [Doc::Break(_, offset)] = &mut docs[..] {
-                    *offset += size;
-                }
-                self
-            }
-            _ => Doc::Nest(size, Rc::new(self)),
+        if let Doc::Break(_, offset) = &mut self {
+            *offset += size;
+            self
+        } else {
+            Doc::Nest(size, Rc::new(self))
         }
     }
 }
