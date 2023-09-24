@@ -1,4 +1,4 @@
-use std::borrow::Cow;
+use std::{borrow::Cow, rc::Rc};
 
 /// The data structure that describes about pretty printing.
 ///
@@ -12,10 +12,10 @@ pub enum Doc<'a> {
     /// The first component is for "flat" mode;
     /// the second component is for "break" mode.
     #[doc(hidden)]
-    Alt(Box<Doc<'a>>, Box<Doc<'a>>),
+    Alt(Rc<Doc<'a>>, Rc<Doc<'a>>),
 
     #[doc(hidden)]
-    Nest(usize, Box<Doc<'a>>),
+    Nest(usize, Rc<Doc<'a>>),
 
     #[doc(hidden)]
     Text(Cow<'a, str>),
@@ -323,7 +323,7 @@ impl<'a> Doc<'a> {
     /// ```
     #[inline]
     pub fn flat_or_break(doc_flat: Doc<'a>, doc_break: Doc<'a>) -> Doc<'a> {
-        Doc::Alt(Box::new(doc_flat), Box::new(doc_break))
+        Doc::Alt(Rc::new(doc_flat), Rc::new(doc_break))
     }
 
     /// Mark the docs as a group.
@@ -418,7 +418,7 @@ impl<'a> Doc<'a> {
                 }
                 self
             }
-            _ => Doc::Nest(size, Box::new(self)),
+            _ => Doc::Nest(size, Rc::new(self)),
         }
     }
 }
