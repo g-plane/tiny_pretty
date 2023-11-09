@@ -35,6 +35,9 @@ pub enum Doc<'a> {
     Group(Vec<Doc<'a>>),
 
     #[doc(hidden)]
+    GroupThen(Vec<Doc<'a>>, Rc<Doc<'a>>, Rc<Doc<'a>>),
+
+    #[doc(hidden)]
     List(Vec<Doc<'a>>),
 }
 
@@ -358,6 +361,51 @@ impl<'a> Doc<'a> {
             Doc::Group(..) => self,
             doc => Doc::Group(vec![doc]),
         }
+    }
+
+    #[inline]
+    /// Mark the docs as a group, then apply `doc_flat` when it can be put on a single line,
+    /// otherwise apply `doc_break`.
+    ///
+    /// One possible usage is for formatting callback function or closure in some
+    /// programming languages.
+    ///
+    /// ```
+    /// use tiny_pretty::{print, Doc, PrintOptions};
+    ///
+    /// let closure = Doc::text("|| {")
+    ///     .append(Doc::hard_line())
+    ///     .append(Doc::text("value"))
+    ///     .nest(4)
+    ///     .append(Doc::hard_line())
+    ///     .append(Doc::text("}"));
+    /// let doc = Doc::text("very_very_very_very_very_long_obj")
+    ///     .append(Doc::line_or_nil())
+    ///     .append(Doc::text(".very_very_very_very_long_method("))
+    ///     .nest(4)
+    ///     .group_then(closure.clone(), closure.nest(4))
+    ///     .append(Doc::text(")"));
+    ///
+    /// assert_eq!(
+    /// "very_very_very_very_very_long_obj.very_very_very_very_long_method(|| {
+    ///     value
+    /// })", &print(&doc, &Default::default()));
+    /// assert_eq!(
+    /// "very_very_very_very_very_long_obj
+    ///     .very_very_very_very_long_method(|| {
+    ///         value
+    ///     })", &print(&doc, &PrintOptions { width: 40, ..Default::default() }));
+    /// ```
+    pub fn group_then(self, doc_flat: Doc<'a>, doc_break: Doc<'a>) -> Doc<'a> {
+        Doc::GroupThen(
+            if let Doc::List(docs) | Doc::Group(docs) = self {
+                docs
+            } else {
+                vec![self]
+            },
+            Rc::new(doc_flat),
+            Rc::new(doc_break),
+        )
     }
 
     /// Join two docs.
