@@ -108,6 +108,7 @@ pub fn print(doc: &Doc, options: &PrintOptions) -> String {
                         .map(|doc| (indent, Mode::Flat, doc))
                         .rev()
                         .collect();
+                    let original_mode = mode;
                     let mode =
                         if fitting(fitting_actions, actions.iter().rev(), cols, options.width) {
                             Mode::Flat
@@ -116,7 +117,7 @@ pub fn print(doc: &Doc, options: &PrintOptions) -> String {
                         };
                     actions.push((
                         indent,
-                        mode,
+                        original_mode,
                         if let Mode::Flat = mode {
                             doc_flat
                         } else {

@@ -373,6 +373,8 @@ impl<'a> Doc<'a> {
     /// ```
     /// use tiny_pretty::{print, Doc, PrintOptions};
     ///
+    /// let print_options = PrintOptions { width: 40, ..Default::default() };
+    ///
     /// let closure = Doc::text("|| {")
     ///     .append(Doc::hard_line())
     ///     .append(Doc::text("value"))
@@ -394,7 +396,24 @@ impl<'a> Doc<'a> {
     /// "very_very_very_very_very_long_obj
     ///     .very_very_very_very_long_method(|| {
     ///         value
-    ///     })", &print(&doc, &PrintOptions { width: 40, ..Default::default() }));
+    ///     })", &print(&doc, &print_options));
+    ///
+    /// let arr = Doc::text("[very_very_ver_long_item,")
+    ///     .append(Doc::line_or_space())
+    ///     .append(Doc::text("very_very_ver_long_item,"))
+    ///     .append(Doc::line_or_space())
+    ///     .append(Doc::text("very_very_ver_long_item"))
+    ///     .append(Doc::text("]"))
+    ///     .group()
+    ///     .nest(4);
+    /// let doc = Doc::text("array:").append(
+    ///     // We don't use `soft_line` here because `group_then` will group it.
+    ///     Doc::line_or_space().group_then(arr.clone(), arr.nest(4))
+    /// );
+    /// assert_eq!(
+    /// "array: [very_very_ver_long_item,
+    ///     very_very_ver_long_item,
+    ///     very_very_ver_long_item]", &print(&doc, &print_options));
     /// ```
     pub fn group_then(self, doc_flat: Doc<'a>, doc_break: Doc<'a>) -> Doc<'a> {
         Doc::GroupThen(
