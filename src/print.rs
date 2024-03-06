@@ -2,6 +2,7 @@ use crate::{
     options::{LineBreak, PrintOptions},
     Doc, IndentKind,
 };
+use std::mem;
 
 #[derive(Clone, Copy, Debug)]
 enum Mode {
@@ -19,121 +20,163 @@ type Action<'a> = (usize, Mode, &'a Doc<'a>);
 pub fn print(doc: &Doc, options: &PrintOptions) -> String {
     assert!(options.tab_size > 0);
 
-    let line_break = match options.line_break {
-        LineBreak::Lf => "\n",
-        LineBreak::Crlf => "\r\n",
-    };
-
     let mut out = String::with_capacity(1024);
-    let mut cols = 0;
-    let mut actions = Vec::with_capacity(128);
-    actions.push((0, Mode::Break, doc));
+    let mut printer = Printer::default();
+    printer.print_to(doc, options, &mut out);
+    out
+}
 
-    while let Some((indent, mode, doc)) = actions.pop() {
-        match doc {
-            Doc::Nil => {}
-            Doc::Alt(doc_flat, doc_break) => match mode {
-                Mode::Flat => actions.push((indent, mode, doc_flat)),
-                Mode::Break => actions.push((indent, mode, doc_break)),
-            },
-            Doc::Nest(offset, doc) => {
-                actions.push((indent + offset, mode, doc));
-            }
-            Doc::Text(text) => {
-                cols += measure_text_width(text);
-                out.push_str(text);
-            }
-            Doc::NewLine => {
-                cols = indent;
-                out.push_str(line_break);
-                match options.indent_kind {
-                    IndentKind::Space => {
-                        out.push_str(&" ".repeat(indent));
-                    }
-                    IndentKind::Tab => {
-                        out.push_str(&"\t".repeat(indent / options.tab_size));
-                        out.push_str(&" ".repeat(indent % options.tab_size));
+#[derive(Default)]
+struct Printer {
+    cols: usize,
+}
+
+impl Printer {
+    fn print_to(&mut self, doc: &Doc, options: &PrintOptions, out: &mut String) -> bool {
+        let line_break = match options.line_break {
+            LineBreak::Lf => "\n",
+            LineBreak::Crlf => "\r\n",
+        };
+
+        let mut fits = true;
+
+        let mut actions = Vec::with_capacity(128);
+        actions.push((self.cols, Mode::Break, doc));
+
+        while let Some((indent, mode, doc)) = actions.pop() {
+            match doc {
+                Doc::Nil => {}
+                Doc::Alt(doc_flat, doc_break) => match mode {
+                    Mode::Flat => actions.push((indent, mode, doc_flat)),
+                    Mode::Break => actions.push((indent, mode, doc_break)),
+                },
+                Doc::Union(attempt, alternate) => {
+                    // FIXME: add tests for the `mem::replace` call
+                    let original_cols = mem::replace(&mut self.cols, indent);
+
+                    let mut buf = String::new();
+                    if self.print_to(&attempt, options, &mut buf) {
+                        // SAFETY: Both are `String`s.
+                        unsafe {
+                            out.as_mut_vec().append(buf.as_mut_vec());
+                        }
+                    } else {
+                        self.cols = original_cols;
+                        actions.push((indent, mode, alternate));
                     }
                 }
-            }
-            Doc::EmptyLine => {
-                out.push_str(line_break);
-            }
-            Doc::Break(spaces, offset) => match mode {
-                Mode::Flat => {
-                    cols += spaces;
-                    out.push_str(&" ".repeat(*spaces));
+                Doc::Nest(offset, doc) => {
+                    actions.push((indent + offset, mode, doc));
                 }
-                Mode::Break => {
-                    cols = indent + offset;
+                Doc::Text(text) => {
+                    self.cols += measure_text_width(text);
+                    out.push_str(text);
+                    fits &= self.cols <= options.width;
+                }
+                Doc::NewLine => {
+                    self.cols = indent;
                     out.push_str(line_break);
                     match options.indent_kind {
                         IndentKind::Space => {
-                            out.push_str(&" ".repeat(cols));
+                            out.push_str(&" ".repeat(indent));
                         }
                         IndentKind::Tab => {
-                            out.push_str(&"\t".repeat(cols / options.tab_size));
-                            out.push_str(&" ".repeat(cols % options.tab_size));
+                            out.push_str(&"\t".repeat(indent / options.tab_size));
+                            out.push_str(&" ".repeat(indent % options.tab_size));
                         }
                     }
+                    fits &= self.cols <= options.width;
                 }
-            },
-            Doc::Group(docs) => match mode {
-                Mode::Flat => {
-                    actions.extend(docs.iter().map(|doc| (indent, Mode::Flat, doc)).rev());
+                Doc::EmptyLine => {
+                    out.push_str(line_break);
                 }
-                Mode::Break => {
-                    let fitting_actions = docs
-                        .iter()
-                        .map(|doc| (indent, Mode::Flat, doc))
-                        .rev()
-                        .collect();
-                    let mode =
-                        if fitting(fitting_actions, actions.iter().rev(), cols, options.width) {
+                Doc::Break(spaces, offset) => {
+                    match mode {
+                        Mode::Flat => {
+                            self.cols += spaces;
+                            out.push_str(&" ".repeat(*spaces));
+                        }
+                        Mode::Break => {
+                            self.cols = indent + offset;
+                            out.push_str(line_break);
+                            match options.indent_kind {
+                                IndentKind::Space => {
+                                    out.push_str(&" ".repeat(self.cols));
+                                }
+                                IndentKind::Tab => {
+                                    out.push_str(&"\t".repeat(self.cols / options.tab_size));
+                                    out.push_str(&" ".repeat(self.cols % options.tab_size));
+                                }
+                            }
+                        }
+                    };
+                    fits &= self.cols <= options.width;
+                }
+                Doc::Group(docs) => match mode {
+                    Mode::Flat => {
+                        actions.extend(docs.iter().map(|doc| (indent, Mode::Flat, doc)).rev());
+                    }
+                    Mode::Break => {
+                        let fitting_actions = docs
+                            .iter()
+                            .map(|doc| (indent, Mode::Flat, doc))
+                            .rev()
+                            .collect();
+                        let mode = if fitting(
+                            fitting_actions,
+                            actions.iter().rev(),
+                            self.cols,
+                            options.width,
+                        ) {
                             Mode::Flat
                         } else {
                             Mode::Break
                         };
+                        actions.extend(docs.iter().map(|doc| (indent, mode, doc)).rev());
+                    }
+                },
+                Doc::GroupThen(group, doc_flat, doc_break) => match mode {
+                    Mode::Flat => {
+                        actions.push((indent, Mode::Flat, doc_flat));
+                        actions.extend(group.iter().map(|doc| (indent, Mode::Flat, doc)).rev());
+                    }
+                    Mode::Break => {
+                        let fitting_actions = group
+                            .iter()
+                            .map(|doc| (indent, Mode::Flat, doc))
+                            .rev()
+                            .collect();
+                        let original_mode = mode;
+                        let mode = if fitting(
+                            fitting_actions,
+                            actions.iter().rev(),
+                            self.cols,
+                            options.width,
+                        ) {
+                            Mode::Flat
+                        } else {
+                            Mode::Break
+                        };
+                        actions.push((
+                            indent,
+                            original_mode,
+                            if let Mode::Flat = mode {
+                                doc_flat
+                            } else {
+                                doc_break
+                            },
+                        ));
+                        actions.extend(group.iter().map(|doc| (indent, mode, doc)).rev());
+                    }
+                },
+                Doc::List(docs) => {
                     actions.extend(docs.iter().map(|doc| (indent, mode, doc)).rev());
                 }
-            },
-            Doc::GroupThen(group, doc_flat, doc_break) => match mode {
-                Mode::Flat => {
-                    actions.push((indent, Mode::Flat, doc_flat));
-                    actions.extend(group.iter().map(|doc| (indent, Mode::Flat, doc)).rev());
-                }
-                Mode::Break => {
-                    let fitting_actions = group
-                        .iter()
-                        .map(|doc| (indent, Mode::Flat, doc))
-                        .rev()
-                        .collect();
-                    let original_mode = mode;
-                    let mode =
-                        if fitting(fitting_actions, actions.iter().rev(), cols, options.width) {
-                            Mode::Flat
-                        } else {
-                            Mode::Break
-                        };
-                    actions.push((
-                        indent,
-                        original_mode,
-                        if let Mode::Flat = mode {
-                            doc_flat
-                        } else {
-                            doc_break
-                        },
-                    ));
-                    actions.extend(group.iter().map(|doc| (indent, mode, doc)).rev());
-                }
-            },
-            Doc::List(docs) => {
-                actions.extend(docs.iter().map(|doc| (indent, mode, doc)).rev());
             }
         }
-    }
 
-    out
+        fits
+    }
 }
 
 /// Check if a group can be placed on single line.
@@ -155,6 +198,9 @@ fn fitting<'a>(
                 Mode::Flat => actions.push((indent, mode, doc_flat)),
                 Mode::Break => actions.push((indent, mode, doc_break)),
             },
+            Doc::Union(_, doc) => {
+                actions.push((indent, mode, doc));
+            }
             Doc::Nest(offset, doc) => {
                 actions.push((indent + offset, mode, doc));
             }

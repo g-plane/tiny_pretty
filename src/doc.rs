@@ -15,6 +15,11 @@ pub enum Doc<'a> {
     Alt(Rc<Doc<'a>>, Rc<Doc<'a>>),
 
     #[doc(hidden)]
+    /// Try printing the first doc.
+    /// If it exceeds the width limitation, print the second doc.
+    Union(Rc<Doc<'a>>, Rc<Doc<'a>>),
+
+    #[doc(hidden)]
     Nest(usize, Rc<Doc<'a>>),
 
     #[doc(hidden)]
@@ -335,6 +340,91 @@ impl<'a> Doc<'a> {
     #[inline]
     pub fn flat_or_break(doc_flat: Doc<'a>, doc_break: Doc<'a>) -> Doc<'a> {
         Doc::Alt(Rc::new(doc_flat), Rc::new(doc_break))
+    }
+
+    #[inline]
+    /// Try applying the `attempt` doc. If it exceeds the width limitation, apply the `alternate` doc.
+    ///
+    /// This looks similar to [`flat_or_break`](Doc::flat_or_break),
+    /// but you should use [`flat_or_break`](Doc::flat_or_break) with [`group`](Doc::group) as possible.
+    ///
+    /// Only consider using this if there're some [`hard_line`](Doc::hard_line) calls in your doc,
+    /// since [`hard_line`](Doc::hard_line) will always break in a group.
+    /// ```
+    /// use tiny_pretty::{print, Doc, PrintOptions};
+    ///
+    /// let closure = Doc::list(vec![
+    ///     Doc::text("|| {"),
+    ///     Doc::hard_line()
+    ///         .append(
+    ///             Doc::text("call2(|| {")
+    ///                 .append(Doc::hard_line().append(Doc::text("value")).nest(4))
+    ///                 .append(Doc::hard_line())
+    ///                 .append(Doc::text("})"))
+    ///         )
+    ///         .nest(4),
+    ///     Doc::hard_line(),
+    ///     Doc::text("}"),
+    /// ]);
+    ///
+    /// let doc = Doc::text("fn main() {")
+    ///     .append(
+    ///         Doc::hard_line()
+    ///             .append(Doc::union(
+    ///                 Doc::list(vec![
+    ///                     Doc::text("call1("),
+    ///                     Doc::nil()
+    ///                         .append(Doc::text("very_long_arg"))
+    ///                         .append(Doc::text(","))
+    ///                         .append(Doc::space())
+    ///                         .append(closure.clone())
+    ///                         .nest(0),
+    ///                     Doc::text(")"),
+    ///                 ]),
+    ///                 Doc::list(vec![
+    ///                     Doc::text("call1("),
+    ///                     Doc::hard_line()
+    ///                         .append(Doc::text("very_long_arg"))
+    ///                         .append(Doc::text(","))
+    ///                         .append(Doc::hard_line())
+    ///                         .append(closure)
+    ///                         .nest(4),
+    ///                     Doc::hard_line(),
+    ///                     Doc::text(")"),
+    ///                 ]),
+    ///             ))
+    ///             .nest(4)
+    ///     )
+    ///     .append(Doc::hard_line())
+    ///     .append(Doc::text("}"));
+    ///
+    /// assert_eq!("fn main() {
+    ///     call1(
+    ///         very_long_arg,
+    ///         || {
+    ///             call2(|| {
+    ///                 value
+    ///             })
+    ///         }
+    ///     )
+    /// }", &print(&doc, &PrintOptions {
+    ///     width: 10,
+    ///     ..Default::default()
+    /// }));
+    ///
+    /// assert_eq!("fn main() {
+    ///     call1(very_long_arg, || {
+    ///         call2(|| {
+    ///             value
+    ///         })
+    ///     })
+    /// }", &print(&doc, &PrintOptions {
+    ///     width: 30,
+    ///     ..Default::default()
+    /// }));
+    /// ```
+    pub fn union(attempt: Doc<'a>, alternate: Doc<'a>) -> Doc<'a> {
+        Doc::Union(Rc::new(attempt), Rc::new(alternate))
     }
 
     /// Mark the docs as a group.
