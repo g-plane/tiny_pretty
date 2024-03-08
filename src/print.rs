@@ -3,7 +3,7 @@ use crate::{
     Doc, IndentKind,
 };
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy)]
 enum Mode {
     Flat,
     Break,
