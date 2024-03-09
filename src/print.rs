@@ -200,9 +200,10 @@ fn fitting<'a>(
                 Mode::Flat => actions.push((indent, mode, doc_flat)),
                 Mode::Break => actions.push((indent, mode, doc_break)),
             },
-            Doc::Union(_, doc) => {
-                actions.push((indent, mode, doc));
-            }
+            Doc::Union(attempt, alternate) => match mode {
+                Mode::Flat => actions.push((indent, mode, attempt)),
+                Mode::Break => actions.push((indent, mode, alternate)),
+            },
             Doc::Nest(offset, doc) => {
                 actions.push((indent + offset, mode, doc));
             }
