@@ -343,7 +343,7 @@ impl<'a> Doc<'a> {
     }
 
     #[inline]
-    /// Try applying the `attempt` doc. If it exceeds the width limitation, apply the `alternate` doc.
+    /// Try applying the current doc. If it exceeds the width limitation, apply the `alternate` doc.
     ///
     /// This looks similar to [`flat_or_break`](Doc::flat_or_break),
     /// but you should use [`flat_or_break`](Doc::flat_or_break) with [`group`](Doc::group) as possible.
@@ -370,7 +370,7 @@ impl<'a> Doc<'a> {
     /// let doc = Doc::text("fn main() {")
     ///     .append(
     ///         Doc::hard_line()
-    ///             .append(Doc::union(
+    ///             .append(
     ///                 Doc::list(vec![
     ///                     Doc::text("call1("),
     ///                     Doc::nil()
@@ -380,19 +380,18 @@ impl<'a> Doc<'a> {
     ///                         .append(closure.clone())
     ///                         .nest(0),
     ///                     Doc::text(")"),
-    ///                 ]),
-    ///                 Doc::list(vec![
+    ///                 ]).union(Doc::list(vec![
     ///                     Doc::text("call1("),
-    ///                     Doc::hard_line()
-    ///                         .append(Doc::text("very_long_arg"))
-    ///                         .append(Doc::text(","))
-    ///                         .append(Doc::hard_line())
-    ///                         .append(closure)
-    ///                         .nest(4),
-    ///                     Doc::hard_line(),
-    ///                     Doc::text(")"),
-    ///                 ]),
-    ///             ))
+    ///                         Doc::hard_line()
+    ///                             .append(Doc::text("very_long_arg"))
+    ///                             .append(Doc::text(","))
+    ///                             .append(Doc::hard_line())
+    ///                             .append(closure)
+    ///                             .nest(4),
+    ///                         Doc::hard_line(),
+    ///                         Doc::text(")"),
+    ///                 ])),
+    ///             )
     ///             .nest(4)
     ///     )
     ///     .append(Doc::hard_line())
@@ -423,8 +422,8 @@ impl<'a> Doc<'a> {
     ///     ..Default::default()
     /// }));
     /// ```
-    pub fn union(attempt: Doc<'a>, alternate: Doc<'a>) -> Doc<'a> {
-        Doc::Union(Rc::new(attempt), Rc::new(alternate))
+    pub fn union(self, alternate: Doc<'a>) -> Doc<'a> {
+        Doc::Union(Rc::new(self), Rc::new(alternate))
     }
 
     #[inline]
