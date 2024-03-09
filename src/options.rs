@@ -12,8 +12,8 @@ pub enum IndentKind {
     Tab,
 }
 
-/// Print control options, such as line break and indentation kind.
 #[derive(Clone, Debug)]
+/// Print control options, such as line break and indentation kind.
 pub struct PrintOptions {
     /// Line break for each line. It can be "\n" (LF) or "\r\n" (CRLF).
     ///

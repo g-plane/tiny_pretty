@@ -1,17 +1,17 @@
 use std::{borrow::Cow, rc::Rc};
 
+#[derive(Clone, Debug)]
 /// The data structure that describes about pretty printing.
 ///
 /// You should avoid using variants on this enum;
 /// instead, use helper functions on this enum.
-#[derive(Clone, Debug)]
 pub enum Doc<'a> {
     #[doc(hidden)]
     Nil,
 
+    #[doc(hidden)]
     /// The first component is for "flat" mode;
     /// the second component is for "break" mode.
-    #[doc(hidden)]
     Alt(Rc<Doc<'a>>, Rc<Doc<'a>>),
 
     #[doc(hidden)]
@@ -31,9 +31,9 @@ pub enum Doc<'a> {
     #[doc(hidden)]
     EmptyLine,
 
+    #[doc(hidden)]
     /// The first component is the number of spaces if it can be put on a single line;
     /// the second component is the number of offset if it will be broken into different lines.
-    #[doc(hidden)]
     Break(usize, usize),
 
     #[doc(hidden)]
@@ -47,6 +47,7 @@ pub enum Doc<'a> {
 }
 
 impl<'a> Doc<'a> {
+    #[inline]
     /// Insert a piece of text. It **must not** contain line breaks.
     ///
     /// ```
@@ -58,11 +59,11 @@ impl<'a> Doc<'a> {
     /// let doc = Doc::text(String::from("code"));
     /// assert_eq!("code", &print(&doc, &Default::default()));
     /// ```
-    #[inline]
     pub fn text(s: impl Into<Cow<'a, str>>) -> Doc<'a> {
         Doc::Text(s.into())
     }
 
+    #[inline]
     /// Empty doc, which does nothing.
     ///
     /// ```
@@ -71,11 +72,11 @@ impl<'a> Doc<'a> {
     /// let doc = Doc::nil();
     /// assert!(print(&doc, &Default::default()).is_empty());
     /// ```
-    #[inline]
     pub fn nil() -> Doc<'a> {
         Doc::Nil
     }
 
+    #[inline]
     /// Just a space. This is just short for calling [`text`](Doc::text) with a space.
     ///
     /// ```
@@ -84,11 +85,11 @@ impl<'a> Doc<'a> {
     /// let doc = Doc::space();
     /// assert_eq!(" ", &print(&doc, &Default::default()));
     /// ```
-    #[inline]
     pub fn space() -> Doc<'a> {
         Doc::Text(" ".into())
     }
 
+    #[inline]
     /// Force to print a line break.
     ///
     /// ```
@@ -109,11 +110,11 @@ impl<'a> Doc<'a> {
     ///     .group();
     /// assert_eq!("fn(\n\n", &print(&doc, &Default::default()));
     /// ```
-    #[inline]
     pub fn hard_line() -> Doc<'a> {
         Doc::NewLine
     }
 
+    #[inline]
     /// "Soft line" allows you to put docs on a single line as many as possible.
     /// Once it's going to exceed the width limitation, it will insert a line break,
     /// but before that it will insert spaces instead of line break.
@@ -151,11 +152,11 @@ impl<'a> Doc<'a> {
     ///     ),
     /// );
     /// ```
-    #[inline]
     pub fn soft_line() -> Doc<'a> {
         Doc::Group(vec![Doc::Break(1, 0)])
     }
 
+    #[inline]
     /// "Empty line" is simliar to [`hard_line`](Doc::hard_line) but it won't be
     /// affected by indentation. That is, it always prints an empty line without
     /// spaces or tabs indented.
@@ -178,11 +179,11 @@ impl<'a> Doc<'a> {
     ///     ),
     /// );
     /// ```
-    #[inline]
     pub fn empty_line() -> Doc<'a> {
         Doc::EmptyLine
     }
 
+    #[inline]
     /// Create a list of docs.
     ///
     /// ```
@@ -191,11 +192,11 @@ impl<'a> Doc<'a> {
     /// let doc = Doc::list(vec![Doc::text("a"), Doc::text("b"), Doc::text("c")]);
     /// assert_eq!("abc", &print(&doc, &Default::default()));
     /// ```
-    #[inline]
-    pub fn list(l: Vec<Doc<'a>>) -> Doc<'a> {
-        Doc::List(l)
+    pub fn list(docs: Vec<Doc<'a>>) -> Doc<'a> {
+        Doc::List(docs)
     }
 
+    #[inline]
     /// Print a space if doc can be put on a single line, otherwise print a line break.
     ///
     /// *This won't take any effects if used outside a group: it will just print a line break.*
@@ -241,11 +242,11 @@ impl<'a> Doc<'a> {
     ///     ),
     /// );
     /// ```
-    #[inline]
     pub fn line_or_space() -> Doc<'a> {
         Doc::Break(1, 0)
     }
 
+    #[inline]
     /// Print nothing if doc can be put on a single line, otherwise print a line break.
     ///
     /// *This won't take any effects if used outside a group: it will just print a line break.*
@@ -289,11 +290,11 @@ impl<'a> Doc<'a> {
     ///     ),
     /// );
     /// ```
-    #[inline]
     pub fn line_or_nil() -> Doc<'a> {
         Doc::Break(0, 0)
     }
 
+    #[inline]
     /// Apply `doc_flat` when it can be put on a single line,
     /// otherwise apply `doc_break`.
     ///
@@ -337,7 +338,6 @@ impl<'a> Doc<'a> {
     ///     ..Default::default()
     /// }));
     /// ```
-    #[inline]
     pub fn flat_or_break(doc_flat: Doc<'a>, doc_break: Doc<'a>) -> Doc<'a> {
         Doc::Alt(Rc::new(doc_flat), Rc::new(doc_break))
     }
@@ -427,6 +427,7 @@ impl<'a> Doc<'a> {
         Doc::Union(Rc::new(attempt), Rc::new(alternate))
     }
 
+    #[inline]
     /// Mark the docs as a group.
     ///
     /// For a group of docs, when printing,
@@ -444,7 +445,6 @@ impl<'a> Doc<'a> {
     /// let doc = Doc::text("code").group();
     /// assert_eq!("code", &print(&doc, &Default::default()));
     /// ```
-    #[inline]
     pub fn group(self) -> Doc<'a> {
         match self {
             Doc::List(list) => Doc::Group(list),
@@ -517,6 +517,7 @@ impl<'a> Doc<'a> {
         )
     }
 
+    #[inline]
     /// Join two docs.
     ///
     /// ```
@@ -525,7 +526,6 @@ impl<'a> Doc<'a> {
     /// let doc = Doc::text("a").append(Doc::text("b")).append(Doc::text("c"));
     /// assert_eq!("abc", &print(&doc, &Default::default()));
     /// ```
-    #[inline]
     pub fn append(self, other: Doc<'a>) -> Doc<'a> {
         let mut current = if let Doc::List(docs) = self {
             docs
@@ -539,6 +539,7 @@ impl<'a> Doc<'a> {
         Doc::List(current)
     }
 
+    #[inline]
     /// Concatenate an iterator whose items are docs.
     ///
     /// ```
@@ -547,7 +548,6 @@ impl<'a> Doc<'a> {
     /// let doc = Doc::text("a").concat(vec![Doc::text("b"), Doc::text("c")].into_iter());
     /// assert_eq!("abc", &print(&doc, &Default::default()));
     /// ```
-    #[inline]
     pub fn concat(self, iter: impl Iterator<Item = Doc<'a>>) -> Doc<'a> {
         let mut current = if let Doc::List(docs) = self {
             docs
@@ -558,6 +558,7 @@ impl<'a> Doc<'a> {
         Doc::List(current)
     }
 
+    #[inline]
     /// Increase indentation level. Usually this method should be called on group
     /// or line break. Calling this on text won't take any effects.
     ///
@@ -570,7 +571,6 @@ impl<'a> Doc<'a> {
     /// let doc = Doc::text("code").nest(2);
     /// assert_eq!("code", &print(&doc, &Default::default()));
     /// ```
-    #[inline]
     pub fn nest(mut self, size: usize) -> Doc<'a> {
         if let Doc::Break(_, offset) = &mut self {
             *offset += size;
