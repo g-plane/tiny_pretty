@@ -113,7 +113,7 @@
 //!   omg_so_many_parameters(),
 //!   we_should_refactor_this(),
 //!   is_there_seriously_another_one()
-//! )"#.trim(), &print(&build_doc(&fn_call), &PrintOptions::default()));
+//! )"#.trim(), &print(build_doc(&fn_call), &PrintOptions::default()));
 //! ```
 //!
 //! Besides, if we have a function call which is short enough to fit on single line:
@@ -155,7 +155,7 @@
 //! #
 //! assert_eq!(
 //!     "foo(a(), b(), c(), d())",
-//!     &print(&build_doc(&fn_call), &PrintOptions::default()),
+//!     &print(build_doc(&fn_call), &PrintOptions::default()),
 //! );
 //! ```
 //!

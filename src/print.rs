@@ -2,6 +2,7 @@ use crate::{
     options::{LineBreak, PrintOptions},
     Doc, IndentKind,
 };
+use std::rc::Rc;
 
 #[derive(Clone, Copy)]
 enum Mode {
@@ -9,19 +10,19 @@ enum Mode {
     Break,
 }
 
-type Action<'a> = (usize, Mode, &'a Doc<'a>);
+type Action<'a> = (usize, Mode, Rc<Doc<'a>>);
 
 /// Pretty print a doc.
 ///
 /// ## Panics
 ///
 /// Panics if `options.tab_size` is `0`.
-pub fn print(doc: &Doc, options: &PrintOptions) -> String {
+pub fn print(doc: Doc, options: &PrintOptions) -> String {
     assert!(options.tab_size > 0);
 
     let mut printer = Printer::new(options);
     let mut out = String::with_capacity(1024);
-    printer.print_to((0, Mode::Break, doc), &mut out);
+    printer.print_to((0, Mode::Break, Rc::new(doc)), &mut out);
     out
 }
 
@@ -35,7 +36,7 @@ impl<'a> Printer<'a> {
         Self { options, cols: 0 }
     }
 
-    fn print_to(&mut self, init_action: Action<'a>, out: &mut String) -> bool {
+    fn print_to(&mut self, init_action: Action, out: &mut String) -> bool {
         let line_break = match self.options.line_break {
             LineBreak::Lf => "\n",
             LineBreak::Crlf => "\r\n",
@@ -47,7 +48,7 @@ impl<'a> Printer<'a> {
         let mut fits = true;
 
         while let Some((indent, mode, doc)) = actions.pop() {
-            match doc {
+            match Rc::unwrap_or_clone(doc) {
                 Doc::Nil => {}
                 Doc::Alt(doc_flat, doc_break) => match mode {
                     Mode::Flat => actions.push((indent, mode, doc_flat)),
@@ -57,7 +58,7 @@ impl<'a> Printer<'a> {
                     let original_cols = self.cols;
 
                     let mut buf = String::new();
-                    if self.print_to((indent, mode, &attempt), &mut buf) {
+                    if self.print_to((indent, mode, attempt), &mut buf) {
                         // SAFETY: Both are `String`s.
                         unsafe {
                             out.as_mut_vec().append(buf.as_mut_vec());
@@ -71,8 +72,8 @@ impl<'a> Printer<'a> {
                     actions.push((indent + offset, mode, doc));
                 }
                 Doc::Text(text) => {
-                    self.cols += measure_text_width(text);
-                    out.push_str(text);
+                    self.cols += measure_text_width(&text);
+                    out.push_str(&text);
                     fits &= self.cols <= self.options.width;
                 }
                 Doc::NewLine => {
@@ -96,7 +97,7 @@ impl<'a> Printer<'a> {
                     match mode {
                         Mode::Flat => {
                             self.cols += spaces;
-                            out.push_str(&" ".repeat(*spaces));
+                            out.push_str(&" ".repeat(spaces));
                         }
                         Mode::Break => {
                             self.cols = indent + offset;
@@ -116,12 +117,16 @@ impl<'a> Printer<'a> {
                 }
                 Doc::Group(docs) => match mode {
                     Mode::Flat => {
-                        actions.extend(docs.iter().map(|doc| (indent, Mode::Flat, doc)).rev());
+                        actions.extend(
+                            docs.iter()
+                                .map(|doc| (indent, Mode::Flat, Rc::clone(doc)))
+                                .rev(),
+                        );
                     }
                     Mode::Break => {
                         let fitting_actions = docs
                             .iter()
-                            .map(|doc| (indent, Mode::Flat, doc))
+                            .map(|doc| (indent, Mode::Flat, Rc::clone(doc)))
                             .rev()
                             .collect();
                         let mode = if fitting(
@@ -134,11 +139,11 @@ impl<'a> Printer<'a> {
                         } else {
                             Mode::Break
                         };
-                        actions.extend(docs.iter().map(|doc| (indent, mode, doc)).rev());
+                        actions.extend(docs.iter().map(|doc| (indent, mode, Rc::clone(doc))).rev());
                     }
                 },
                 Doc::List(docs) => {
-                    actions.extend(docs.iter().map(|doc| (indent, mode, doc)).rev());
+                    actions.extend(docs.iter().map(|doc| (indent, mode, Rc::clone(doc))).rev());
                 }
             }
         }
@@ -153,14 +158,14 @@ impl<'a> Printer<'a> {
 /// it just simply attempts to put the whole group and the rest actions into current line.
 /// After that, if current column is still less than width limitation,
 /// we can feel sure that this group can be put on current line without line breaks.
-fn fitting<'a>(
-    mut actions: Vec<Action<'a>>,
-    mut best_actions: impl Iterator<Item = &'a Action<'a>>,
+fn fitting<'a, 'b: 'a>(
+    mut actions: Vec<Action<'b>>,
+    mut best_actions: impl Iterator<Item = &'a Action<'b>>,
     mut cols: usize,
     width: usize,
 ) -> bool {
-    while let Some((indent, mode, doc)) = actions.pop().or_else(|| best_actions.next().copied()) {
-        match doc {
+    while let Some((indent, mode, doc)) = actions.pop().or_else(|| best_actions.next().cloned()) {
+        match Rc::unwrap_or_clone(doc) {
             Doc::Nil => {}
             Doc::Alt(doc_flat, doc_break) => match mode {
                 Mode::Flat => actions.push((indent, mode, doc_flat)),
@@ -174,7 +179,7 @@ fn fitting<'a>(
                 actions.push((indent + offset, mode, doc));
             }
             Doc::Text(text) => {
-                cols += measure_text_width(text);
+                cols += measure_text_width(&text);
             }
             Doc::Break(spaces, _) => match mode {
                 Mode::Flat => cols += spaces,
@@ -186,7 +191,7 @@ fn fitting<'a>(
             }
             Doc::EmptyLine => {}
             Doc::Group(docs) | Doc::List(docs) => {
-                actions.extend(docs.iter().map(|doc| (indent, mode, doc)).rev());
+                actions.extend(docs.iter().map(|doc| (indent, mode, Rc::clone(doc))).rev());
             }
         }
         if cols > width {

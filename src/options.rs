@@ -24,12 +24,12 @@ pub struct PrintOptions {
     ///
     /// let doc = Doc::list(vec![Doc::text("a"), Doc::hard_line(), Doc::text("b")]);
     ///
-    /// assert_eq!("a\nb", &print(&doc, &PrintOptions {
+    /// assert_eq!("a\nb", &print(doc.clone(), &PrintOptions {
     ///     line_break: LineBreak::Lf,
     ///     ..Default::default()
     /// }));
     ///
-    /// assert_eq!("a\r\nb", &print(&doc, &PrintOptions {
+    /// assert_eq!("a\r\nb", &print(doc.clone(), &PrintOptions {
     ///     line_break: LineBreak::Crlf,
     ///     ..Default::default()
     /// }));
@@ -53,12 +53,12 @@ pub struct PrintOptions {
     ///
     /// let doc = Doc::list(vec![Doc::text("a"), Doc::hard_line().nest(2), Doc::text("b")]);
     ///
-    /// assert_eq!("a\n  b", &print(&doc, &PrintOptions {
+    /// assert_eq!("a\n  b", &print(doc.clone(), &PrintOptions {
     ///     indent_kind: IndentKind::Space,
     ///     ..Default::default()
     /// }));
     ///
-    /// assert_eq!("a\n\tb", &print(&doc, &PrintOptions {
+    /// assert_eq!("a\n\tb", &print(doc.clone(), &PrintOptions {
     ///     indent_kind: IndentKind::Tab,
     ///     ..Default::default()
     /// }));
@@ -75,19 +75,19 @@ pub struct PrintOptions {
     /// use tiny_pretty::{print, Doc, PrintOptions};
     ///
     /// let doc = Doc::list(vec![Doc::text("aaaa"), Doc::line_or_space(), Doc::text("bbbb")]).group();
-    /// assert_eq!("aaaa\nbbbb", &print(&doc, &PrintOptions {
+    /// assert_eq!("aaaa\nbbbb", &print(doc.clone(), &PrintOptions {
     ///     width: 5,
     ///     ..Default::default()
     /// }));
     ///
-    /// assert_eq!("aaaa bbbb", &print(&doc, &PrintOptions {
+    /// assert_eq!("aaaa bbbb", &print(doc.clone(), &PrintOptions {
     ///     width: 20,
     ///     ..Default::default()
     /// }));
     ///
     /// let doc = Doc::list(vec![Doc::text("aaaaaaaa"), Doc::line_or_space(), Doc::text("bbbbbbbb")])
     ///     .group();
-    /// assert_eq!("aaaaaaaa\nbbbbbbbb", &print(&doc, &PrintOptions {
+    /// assert_eq!("aaaaaaaa\nbbbbbbbb", &print(doc.clone(), &PrintOptions {
     ///     width: 5,
     ///     ..Default::default()
     /// }));
@@ -112,19 +112,19 @@ pub struct PrintOptions {
     ///     .group()
     ///     .nest(8);
     ///
-    /// assert_eq!("aaaa\n\t   bbbb", &print(&doc, &PrintOptions {
+    /// assert_eq!("aaaa\n\t   bbbb", &print(doc.clone(), &PrintOptions {
     ///     indent_kind: IndentKind::Tab,
     ///     tab_size: 5,
     ///     ..Default::default()
     /// }));
     ///
-    /// assert_eq!("aaaa\n\t\tbbbb", &print(&doc, &PrintOptions {
+    /// assert_eq!("aaaa\n\t\tbbbb", &print(doc.clone(), &PrintOptions {
     ///     indent_kind: IndentKind::Tab,
     ///     tab_size: 4,
     ///     ..Default::default()
     /// }));
     ///
-    /// assert_eq!("aaaa\n        bbbb", &print(&doc, &PrintOptions {
+    /// assert_eq!("aaaa\n        bbbb", &print(doc.clone(), &PrintOptions {
     ///     indent_kind: IndentKind::Space,
     ///     tab_size: 5,
     ///     ..Default::default()

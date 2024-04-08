@@ -37,10 +37,10 @@ pub enum Doc<'a> {
     Break(usize, usize),
 
     #[doc(hidden)]
-    Group(Vec<Doc<'a>>),
+    Group(Vec<Rc<Doc<'a>>>),
 
     #[doc(hidden)]
-    List(Vec<Doc<'a>>),
+    List(Vec<Rc<Doc<'a>>>),
 }
 
 impl<'a> Doc<'a> {
@@ -51,10 +51,10 @@ impl<'a> Doc<'a> {
     /// use tiny_pretty::{print, Doc};
     ///
     /// let doc = Doc::text("code");
-    /// assert_eq!("code", &print(&doc, &Default::default()));
+    /// assert_eq!("code", &print(doc, &Default::default()));
     ///
     /// let doc = Doc::text(String::from("code"));
-    /// assert_eq!("code", &print(&doc, &Default::default()));
+    /// assert_eq!("code", &print(doc, &Default::default()));
     /// ```
     pub fn text(s: impl Into<Cow<'a, str>>) -> Doc<'a> {
         Doc::Text(s.into())
@@ -67,7 +67,7 @@ impl<'a> Doc<'a> {
     /// use tiny_pretty::{print, Doc};
     ///
     /// let doc = Doc::nil();
-    /// assert!(print(&doc, &Default::default()).is_empty());
+    /// assert!(print(doc, &Default::default()).is_empty());
     /// ```
     pub fn nil() -> Doc<'a> {
         Doc::Nil
@@ -80,7 +80,7 @@ impl<'a> Doc<'a> {
     /// use tiny_pretty::{print, Doc};
     ///
     /// let doc = Doc::space();
-    /// assert_eq!(" ", &print(&doc, &Default::default()));
+    /// assert_eq!(" ", &print(doc, &Default::default()));
     /// ```
     pub fn space() -> Doc<'a> {
         Doc::Text(" ".into())
@@ -93,8 +93,8 @@ impl<'a> Doc<'a> {
     /// use tiny_pretty::{print, Doc, LineBreak, PrintOptions};
     ///
     /// let doc = Doc::hard_line();
-    /// assert_eq!("\n", &print(&doc, &Default::default()));
-    /// assert_eq!("\r\n", &print(&doc, &PrintOptions {
+    /// assert_eq!("\n", &print(doc.clone(), &Default::default()));
+    /// assert_eq!("\r\n", &print(doc.clone(), &PrintOptions {
     ///     line_break: LineBreak::Crlf,
     ///     ..Default::default()
     /// }));
@@ -105,7 +105,7 @@ impl<'a> Doc<'a> {
     ///     .append(Doc::line_or_space())
     ///     .append(Doc::hard_line())
     ///     .group();
-    /// assert_eq!("fn(\n\n", &print(&doc, &Default::default()));
+    /// assert_eq!("fn(\n\n", &print(doc, &Default::default()));
     /// ```
     pub fn hard_line() -> Doc<'a> {
         Doc::NewLine
@@ -125,7 +125,7 @@ impl<'a> Doc<'a> {
     /// assert_eq!(
     ///     "aaaa bbbb\ncccc",
     ///     &print(
-    ///         &Doc::list(vec![
+    ///         Doc::list(vec![
     ///             Doc::text("aaaa"),
     ///             Doc::soft_line(),
     ///             Doc::text("bbbb"),
@@ -138,7 +138,7 @@ impl<'a> Doc<'a> {
     /// assert_eq!(
     ///     "aaaa\nbbbb\ncccc",
     ///     &print(
-    ///         &Doc::list(vec![
+    ///         Doc::list(vec![
     ///             Doc::text("aaaa"),
     ///             Doc::line_or_space(),
     ///             Doc::text("bbbb"),
@@ -150,7 +150,7 @@ impl<'a> Doc<'a> {
     /// );
     /// ```
     pub fn soft_line() -> Doc<'a> {
-        Doc::Group(vec![Doc::Break(1, 0)])
+        Doc::Group(vec![Rc::new(Doc::Break(1, 0))])
     }
 
     #[inline]
@@ -164,14 +164,14 @@ impl<'a> Doc<'a> {
     /// assert_eq!(
     ///     "\n",
     ///     &print(
-    ///         &Doc::empty_line().nest(1),
+    ///         Doc::empty_line().nest(1),
     ///         &Default::default(),
     ///     ),
     /// );
     /// assert_eq!(
     ///     "\n ",
     ///     &print(
-    ///         &Doc::hard_line().nest(1),
+    ///         Doc::hard_line().nest(1),
     ///         &Default::default(),
     ///     ),
     /// );
@@ -187,10 +187,10 @@ impl<'a> Doc<'a> {
     /// use tiny_pretty::{print, Doc};
     ///
     /// let doc = Doc::list(vec![Doc::text("a"), Doc::text("b"), Doc::text("c")]);
-    /// assert_eq!("abc", &print(&doc, &Default::default()));
+    /// assert_eq!("abc", &print(doc, &Default::default()));
     /// ```
     pub fn list(docs: Vec<Doc<'a>>) -> Doc<'a> {
-        Doc::List(docs)
+        Doc::List(docs.into_iter().map(Rc::new).collect())
     }
 
     #[inline]
@@ -205,7 +205,7 @@ impl<'a> Doc<'a> {
     /// assert_eq!(
     ///     "aaaa\nbbbb\ncccc",
     ///     &print(
-    ///         &Doc::list(vec![
+    ///         Doc::list(vec![
     ///             Doc::text("aaaa"),
     ///             Doc::line_or_space(),
     ///             Doc::text("bbbb"),
@@ -218,7 +218,7 @@ impl<'a> Doc<'a> {
     /// assert_eq!(
     ///     "a b",
     ///     &print(
-    ///         &Doc::list(vec![
+    ///         Doc::list(vec![
     ///             Doc::text("a"),
     ///             Doc::line_or_space(),
     ///             Doc::text("b"),
@@ -230,7 +230,7 @@ impl<'a> Doc<'a> {
     /// assert_eq!(
     ///     "a\nb",
     ///     &print(
-    ///         &Doc::list(vec![
+    ///         Doc::list(vec![
     ///             Doc::text("a"),
     ///             Doc::line_or_space(),
     ///             Doc::text("b"),
@@ -255,7 +255,7 @@ impl<'a> Doc<'a> {
     /// assert_eq!(
     ///     "func(\narg",
     ///     &print(
-    ///         &Doc::list(vec![
+    ///         Doc::list(vec![
     ///             Doc::text("func("),
     ///             Doc::line_or_nil(),
     ///             Doc::text("arg"),
@@ -266,7 +266,7 @@ impl<'a> Doc<'a> {
     /// assert_eq!(
     ///     "f(arg",
     ///     &print(
-    ///         &Doc::list(vec![
+    ///         Doc::list(vec![
     ///             Doc::text("f("),
     ///             Doc::line_or_nil(),
     ///             Doc::text("arg"),
@@ -278,7 +278,7 @@ impl<'a> Doc<'a> {
     /// assert_eq!(
     ///     "f(\narg",
     ///     &print(
-    ///         &Doc::list(vec![
+    ///         Doc::list(vec![
     ///             Doc::text("f("),
     ///             Doc::line_or_nil(),
     ///             Doc::text("arg"),
@@ -309,12 +309,12 @@ impl<'a> Doc<'a> {
     ///     Doc::text(")"),
     /// ]).group();
     ///
-    /// assert_eq!("function(\narg,\n)", &print(&doc, &PrintOptions {
+    /// assert_eq!("function(\narg,\n)", &print(doc.clone(), &PrintOptions {
     ///     width: 10,
     ///     ..Default::default()
     /// }));
     ///
-    /// assert_eq!("function(arg)", &print(&doc, &PrintOptions {
+    /// assert_eq!("function(arg)", &print(doc.clone(), &PrintOptions {
     ///     width: 20,
     ///     ..Default::default()
     /// }));
@@ -330,7 +330,7 @@ impl<'a> Doc<'a> {
     ///     Doc::text(")"),
     /// ]); // <-- no grouping here
     ///
-    /// assert_eq!("function(\narg,\n)", &print(&doc, &PrintOptions {
+    /// assert_eq!("function(\narg,\n)", &print(doc, &PrintOptions {
     ///     width: 20,
     ///     ..Default::default()
     /// }));
@@ -403,7 +403,7 @@ impl<'a> Doc<'a> {
     ///             })
     ///         }
     ///     )
-    /// }", &print(&doc, &PrintOptions {
+    /// }", &print(doc.clone(), &PrintOptions {
     ///     width: 10,
     ///     ..Default::default()
     /// }));
@@ -414,7 +414,7 @@ impl<'a> Doc<'a> {
     ///             value
     ///         })
     ///     })
-    /// }", &print(&doc, &PrintOptions {
+    /// }", &print(doc.clone(), &PrintOptions {
     ///     width: 30,
     ///     ..Default::default()
     /// }));
@@ -439,13 +439,13 @@ impl<'a> Doc<'a> {
     /// use tiny_pretty::{print, Doc};
     ///
     /// let doc = Doc::text("code").group();
-    /// assert_eq!("code", &print(&doc, &Default::default()));
+    /// assert_eq!("code", &print(doc, &Default::default()));
     /// ```
     pub fn group(self) -> Doc<'a> {
         match self {
             Doc::List(list) => Doc::Group(list),
             Doc::Group(..) => self,
-            doc => Doc::Group(vec![doc]),
+            doc => Doc::Group(vec![Rc::new(doc)]),
         }
     }
 
@@ -456,17 +456,17 @@ impl<'a> Doc<'a> {
     /// use tiny_pretty::{print, Doc};
     ///
     /// let doc = Doc::text("a").append(Doc::text("b")).append(Doc::text("c"));
-    /// assert_eq!("abc", &print(&doc, &Default::default()));
+    /// assert_eq!("abc", &print(doc, &Default::default()));
     /// ```
     pub fn append(self, other: Doc<'a>) -> Doc<'a> {
         let mut current = if let Doc::List(docs) = self {
             docs
         } else {
-            vec![self]
+            vec![Rc::new(self)]
         };
         match other {
             Doc::List(mut docs) => current.append(&mut docs),
-            _ => current.push(other),
+            _ => current.push(Rc::new(other)),
         }
         Doc::List(current)
     }
@@ -478,15 +478,15 @@ impl<'a> Doc<'a> {
     /// use tiny_pretty::{print, Doc};
     ///
     /// let doc = Doc::text("a").concat(vec![Doc::text("b"), Doc::text("c")].into_iter());
-    /// assert_eq!("abc", &print(&doc, &Default::default()));
+    /// assert_eq!("abc", &print(doc, &Default::default()));
     /// ```
     pub fn concat(self, iter: impl Iterator<Item = Doc<'a>>) -> Doc<'a> {
         let mut current = if let Doc::List(docs) = self {
             docs
         } else {
-            vec![self]
+            vec![Rc::new(self)]
         };
-        current.extend(iter);
+        current.extend(iter.map(Rc::new));
         Doc::List(current)
     }
 
@@ -498,10 +498,10 @@ impl<'a> Doc<'a> {
     /// use tiny_pretty::{print, Doc};
     ///
     /// let doc = Doc::hard_line().nest(2);
-    /// assert_eq!("\n  ", &print(&doc, &Default::default()));
+    /// assert_eq!("\n  ", &print(doc, &Default::default()));
     ///
     /// let doc = Doc::text("code").nest(2);
-    /// assert_eq!("code", &print(&doc, &Default::default()));
+    /// assert_eq!("code", &print(doc, &Default::default()));
     /// ```
     pub fn nest(mut self, size: usize) -> Doc<'a> {
         if let Doc::Break(_, offset) = &mut self {
