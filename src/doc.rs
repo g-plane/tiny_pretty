@@ -40,9 +40,6 @@ pub enum Doc<'a> {
     Group(Vec<Doc<'a>>),
 
     #[doc(hidden)]
-    GroupThen(Vec<Doc<'a>>, Rc<Doc<'a>>, Rc<Doc<'a>>),
-
-    #[doc(hidden)]
     List(Vec<Doc<'a>>),
 }
 
@@ -450,70 +447,6 @@ impl<'a> Doc<'a> {
             Doc::Group(..) => self,
             doc => Doc::Group(vec![doc]),
         }
-    }
-
-    #[inline]
-    /// Mark the docs as a group, then apply `doc_flat` when it can be put on a single line,
-    /// otherwise apply `doc_break`.
-    ///
-    /// One possible usage is for formatting callback function or closure in some
-    /// programming languages.
-    ///
-    /// ```
-    /// use tiny_pretty::{print, Doc, PrintOptions};
-    ///
-    /// let print_options = PrintOptions { width: 40, ..Default::default() };
-    ///
-    /// let closure = Doc::text("|| {")
-    ///     .append(Doc::hard_line())
-    ///     .append(Doc::text("value"))
-    ///     .nest(4)
-    ///     .append(Doc::hard_line())
-    ///     .append(Doc::text("}"));
-    /// let doc = Doc::text("very_very_very_very_very_long_obj")
-    ///     .append(Doc::line_or_nil())
-    ///     .append(Doc::text(".very_very_very_very_long_method("))
-    ///     .nest(4)
-    ///     .group_then(closure.clone(), closure.nest(4))
-    ///     .append(Doc::text(")"));
-    ///
-    /// assert_eq!(
-    /// "very_very_very_very_very_long_obj.very_very_very_very_long_method(|| {
-    ///     value
-    /// })", &print(&doc, &Default::default()));
-    /// assert_eq!(
-    /// "very_very_very_very_very_long_obj
-    ///     .very_very_very_very_long_method(|| {
-    ///         value
-    ///     })", &print(&doc, &print_options));
-    ///
-    /// let arr = Doc::text("[very_very_ver_long_item,")
-    ///     .append(Doc::line_or_space())
-    ///     .append(Doc::text("very_very_ver_long_item,"))
-    ///     .append(Doc::line_or_space())
-    ///     .append(Doc::text("very_very_ver_long_item"))
-    ///     .append(Doc::text("]"))
-    ///     .group()
-    ///     .nest(4);
-    /// let doc = Doc::text("array:").append(
-    ///     // We don't use `soft_line` here because `group_then` will group it.
-    ///     Doc::line_or_space().group_then(arr.clone(), arr.nest(4))
-    /// );
-    /// assert_eq!(
-    /// "array: [very_very_ver_long_item,
-    ///     very_very_ver_long_item,
-    ///     very_very_ver_long_item]", &print(&doc, &print_options));
-    /// ```
-    pub fn group_then(self, doc_flat: Doc<'a>, doc_break: Doc<'a>) -> Doc<'a> {
-        Doc::GroupThen(
-            if let Doc::List(docs) | Doc::Group(docs) = self {
-                docs
-            } else {
-                vec![self]
-            },
-            Rc::new(doc_flat),
-            Rc::new(doc_break),
-        )
     }
 
     #[inline]

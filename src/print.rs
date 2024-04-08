@@ -137,40 +137,6 @@ impl<'a> Printer<'a> {
                         actions.extend(docs.iter().map(|doc| (indent, mode, doc)).rev());
                     }
                 },
-                Doc::GroupThen(group, doc_flat, doc_break) => match mode {
-                    Mode::Flat => {
-                        actions.push((indent, Mode::Flat, doc_flat));
-                        actions.extend(group.iter().map(|doc| (indent, Mode::Flat, doc)).rev());
-                    }
-                    Mode::Break => {
-                        let fitting_actions = group
-                            .iter()
-                            .map(|doc| (indent, Mode::Flat, doc))
-                            .rev()
-                            .collect();
-                        let original_mode = mode;
-                        let mode = if fitting(
-                            fitting_actions,
-                            actions.iter().rev(),
-                            self.cols,
-                            self.options.width,
-                        ) {
-                            Mode::Flat
-                        } else {
-                            Mode::Break
-                        };
-                        actions.push((
-                            indent,
-                            original_mode,
-                            if let Mode::Flat = mode {
-                                doc_flat
-                            } else {
-                                doc_break
-                            },
-                        ));
-                        actions.extend(group.iter().map(|doc| (indent, mode, doc)).rev());
-                    }
-                },
                 Doc::List(docs) => {
                     actions.extend(docs.iter().map(|doc| (indent, mode, doc)).rev());
                 }
@@ -221,18 +187,6 @@ fn fitting<'a>(
             Doc::EmptyLine => {}
             Doc::Group(docs) | Doc::List(docs) => {
                 actions.extend(docs.iter().map(|doc| (indent, mode, doc)).rev());
-            }
-            Doc::GroupThen(group, doc_flat, doc_break) => {
-                actions.push((
-                    indent,
-                    mode,
-                    if let Mode::Flat = mode {
-                        doc_flat
-                    } else {
-                        doc_break
-                    },
-                ));
-                actions.extend(group.iter().map(|doc| (indent, mode, doc)).rev());
             }
         }
         if cols > width {
