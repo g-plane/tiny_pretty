@@ -1,6 +1,6 @@
 use std::{borrow::Cow, rc::Rc};
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 /// The data structure that describes about pretty printing.
 ///
 /// You should avoid using variants on this enum;
@@ -41,6 +41,9 @@ pub enum Doc<'a> {
 
     #[doc(hidden)]
     List(Vec<Rc<Doc<'a>>>),
+
+    #[doc(hidden)]
+    Column(Rc<dyn Fn(usize) -> Doc<'a> + 'a>),
 }
 
 impl<'a> Doc<'a> {
@@ -337,6 +340,25 @@ impl<'a> Doc<'a> {
     /// ```
     pub fn flat_or_break(doc_flat: Doc<'a>, doc_break: Doc<'a>) -> Doc<'a> {
         Doc::Alt(Rc::new(doc_flat), Rc::new(doc_break))
+    }
+
+    #[inline]
+    /// Apply the doc returned by a closure that accepts current width as parameter.
+    ///
+    /// ```
+    /// use tiny_pretty::{print, Doc, PrintOptions};
+    ///
+    /// let dot = ".";
+    /// let doc = Doc::text("column after some text: ")
+    ///     .append(Doc::column(|column| Doc::text(column.to_string()).append(Doc::text(dot))));
+    ///
+    /// assert_eq!("column after some text: 24.", &print(doc, &Default::default()));
+    /// ```
+    pub fn column<F>(f: F) -> Doc<'a>
+    where
+        F: Fn(usize) -> Doc<'a> + 'a,
+    {
+        Doc::Column(Rc::new(f))
     }
 
     #[inline]

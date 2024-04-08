@@ -145,6 +145,9 @@ impl<'a> Printer<'a> {
                 Doc::List(docs) => {
                     actions.extend(docs.iter().map(|doc| (indent, mode, Rc::clone(doc))).rev());
                 }
+                Doc::Column(column_fn) => {
+                    actions.push((indent, mode, Rc::new(column_fn(self.cols))));
+                }
             }
         }
 
@@ -192,6 +195,9 @@ fn fitting<'a, 'b: 'a>(
             Doc::EmptyLine => {}
             Doc::Group(docs) | Doc::List(docs) => {
                 actions.extend(docs.iter().map(|doc| (indent, mode, Rc::clone(doc))).rev());
+            }
+            Doc::Column(column_fn) => {
+                actions.push((indent, mode, Rc::new(column_fn(cols))));
             }
         }
         if cols > width {
