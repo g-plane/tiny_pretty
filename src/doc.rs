@@ -1,4 +1,4 @@
-use std::{borrow::Cow, rc::Rc};
+use std::{borrow::Cow, cell::RefCell, rc::Rc};
 
 #[derive(Clone)]
 /// The data structure that describes about pretty printing.
@@ -43,7 +43,7 @@ pub enum Doc<'a> {
     List(Vec<Rc<Doc<'a>>>),
 
     #[doc(hidden)]
-    Column(Rc<dyn Fn(usize) -> Doc<'a> + 'a>),
+    Column(Rc<RefCell<dyn FnMut(usize) -> Doc<'a> + 'a>>),
 }
 
 impl<'a> Doc<'a> {
@@ -356,9 +356,9 @@ impl<'a> Doc<'a> {
     /// ```
     pub fn column<F>(f: F) -> Doc<'a>
     where
-        F: Fn(usize) -> Doc<'a> + 'a,
+        F: FnMut(usize) -> Doc<'a> + 'a,
     {
-        Doc::Column(Rc::new(f))
+        Doc::Column(Rc::new(RefCell::new(f)))
     }
 
     #[inline]

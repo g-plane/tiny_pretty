@@ -146,6 +146,7 @@ impl<'a> Printer<'a> {
                     actions.extend(docs.iter().map(|doc| (indent, mode, Rc::clone(doc))).rev());
                 }
                 Doc::Column(column_fn) => {
+                    let mut column_fn = column_fn.borrow_mut();
                     actions.push((indent, mode, Rc::new(column_fn(self.cols))));
                 }
             }
@@ -197,6 +198,7 @@ fn fitting<'a, 'b: 'a>(
                 actions.extend(docs.iter().map(|doc| (indent, mode, Rc::clone(doc))).rev());
             }
             Doc::Column(column_fn) => {
+                let mut column_fn = column_fn.borrow_mut();
                 actions.push((indent, mode, Rc::new(column_fn(cols))));
             }
         }
