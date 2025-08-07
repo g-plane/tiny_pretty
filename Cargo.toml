@@ -12,7 +12,7 @@ resolver = "3"
 unicode-width = { version = "0.2", optional = true }
 
 [dev-dependencies]
-itertools = "0.12"
+itertools = "0.14"
 
 [features]
 unicode-width = ["dep:unicode-width"]
