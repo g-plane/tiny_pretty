@@ -9,7 +9,7 @@ license = "MIT"
 resolver = "2"
 
 [dependencies]
-unicode-width = { version = "0.1", optional = true }
+unicode-width = { version = "0.2", optional = true }
 
 [dev-dependencies]
 itertools = "0.12"

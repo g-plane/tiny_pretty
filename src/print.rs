@@ -57,7 +57,7 @@ impl<'a> Printer<'a> {
                     let original_cols = self.cols;
 
                     let mut buf = String::new();
-                    if self.print_to((indent, mode, &attempt), &mut buf) {
+                    if self.print_to((indent, mode, attempt), &mut buf) {
                         // SAFETY: Both are `String`s.
                         unsafe {
                             out.as_mut_vec().append(buf.as_mut_vec());
