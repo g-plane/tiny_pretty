@@ -6,13 +6,13 @@ authors = ["Pig Fang <g-plane@hotmail.com>"]
 description = "Tiny implementation of Wadler-style pretty printer."
 repository = "https://github.com/g-plane/tiny_pretty"
 license = "MIT"
-resolver = "2"
+resolver = "3"
 
 [dependencies]
-unicode-width = { version = "0.1", optional = true }
+unicode-width = { version = "0.2", optional = true }
 
 [dev-dependencies]
-itertools = "0.12"
+itertools = "0.14"
 
 [features]
 unicode-width = ["dep:unicode-width"]
