@@ -8,6 +8,15 @@ pretty printing algorithm, with some advanced options like controlling line brea
 
 For tutorial and API documentation, please refer to [docs.rs](https://docs.rs/tiny_pretty).
 
+## Used By
+
+- [wasm-language-tools](https://github.com/g-plane/wasm-language-tools)
+- [Malva](https://github.com/g-plane/malva)
+- [markup_fmt](https://github.com/g-plane/markup_fmt)
+- [Pretty YAML](https://github.com/g-plane/pretty_yaml)
+- [Pretty GraphQL](https://github.com/g-plane/pretty_graphql)
+- [Pretty Jinja](https://github.com/g-plane/pretty_jinja)
+
 ## Credits
 
 - [SML implementation](https://github.com/kfl/wpp)
