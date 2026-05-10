@@ -59,10 +59,10 @@
 //!         .append(Doc::text("("))
 //!         .append(
 //!             Doc::line_or_nil()
-//!                 .append(Doc::list(Itertools::intersperse(
+//!                 .concat(Itertools::intersperse(
 //!                     fn_call.args.iter().map(build_doc),
 //!                     Doc::text(",").append(Doc::line_or_space())
-//!                 ).collect()))
+//!                 ))
 //!                 .nest(2)
 //!                 .append(Doc::line_or_nil())
 //!                 .group()
