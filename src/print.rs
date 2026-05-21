@@ -1,6 +1,6 @@
 use crate::{
-    options::{LineBreak, PrintOptions},
     Doc, IndentKind,
+    options::{LineBreak, PrintOptions},
 };
 
 #[derive(Clone, Copy)]
@@ -140,6 +140,9 @@ impl<'a> Printer<'a> {
                 Doc::List(docs) => {
                     actions.extend(docs.iter().map(|doc| (indent, mode, doc)).rev());
                 }
+                Doc::Slice(docs) => {
+                    actions.extend(docs.iter().map(|doc| (indent, mode, doc)).rev());
+                }
             }
         }
 
@@ -186,6 +189,9 @@ fn fitting<'a>(
             }
             Doc::EmptyLine => {}
             Doc::Group(docs) | Doc::List(docs) => {
+                actions.extend(docs.iter().map(|doc| (indent, mode, doc)).rev());
+            }
+            Doc::Slice(docs) => {
                 actions.extend(docs.iter().map(|doc| (indent, mode, doc)).rev());
             }
         }

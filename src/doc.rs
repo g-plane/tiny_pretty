@@ -41,6 +41,9 @@ pub enum Doc<'a> {
 
     #[doc(hidden)]
     List(Vec<Doc<'a>>),
+
+    #[doc(hidden)]
+    Slice(&'a [Doc<'a>]),
 }
 
 impl<'a> Doc<'a> {
@@ -154,7 +157,7 @@ impl<'a> Doc<'a> {
     }
 
     #[inline]
-    /// "Empty line" is simliar to [`hard_line`](Doc::hard_line) but it won't be
+    /// "Empty line" is similar to [`hard_line`](Doc::hard_line) but it won't be
     /// affected by indentation. That is, it always prints an empty line without
     /// spaces or tabs indented.
     ///
@@ -191,6 +194,21 @@ impl<'a> Doc<'a> {
     /// ```
     pub fn list(docs: Vec<Doc<'a>>) -> Doc<'a> {
         Doc::List(docs)
+    }
+
+    #[inline]
+    /// Create a slice of docs, similar to [`list`](Doc::list).
+    ///
+    /// This won't create a [`Vec`] with allocation, but calling [`append`](Doc::append), [`concat`](Doc::concat) or [`group`](Doc::group) on it will create a [`Vec`].
+    ///
+    /// ```
+    /// use tiny_pretty::{print, Doc};
+    ///
+    /// let docs = [Doc::text("a"), Doc::text("b"), Doc::text("c")];
+    /// assert_eq!("abc", &print(&Doc::slice(&docs), &Default::default()));
+    /// ```
+    pub fn slice(docs: &'a [Doc<'a>]) -> Doc<'a> {
+        Doc::Slice(docs)
     }
 
     #[inline]
