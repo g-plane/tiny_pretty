@@ -40,9 +40,9 @@
 //! If they're too long to fit, we insert line break with indentation:
 //!
 //! - When being on a single line, there're no spaces after left paren and before right paren,
-//! and there must be a space after each argument comma.
+//!   and there must be a space after each argument comma.
 //! - When being splitted into different lines, there must be indentation when printing arguments,
-//! and there must be a line break between arguments.
+//!   and there must be a line break between arguments.
 //!
 //! So, we can build [`Doc`] like this:
 //!
