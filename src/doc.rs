@@ -96,11 +96,13 @@ impl<'a> Doc<'a> {
     /// use tiny_pretty::{print, Doc, LineBreak, PrintOptions};
     ///
     /// let doc = Doc::hard_line();
-    /// assert_eq!("\n", &print(&doc, &Default::default()));
-    /// assert_eq!("\r\n", &print(&doc, &PrintOptions {
+    /// let options = Default::default();
+    /// assert_eq!("\n", &print(&doc, &options));
+    /// let options = PrintOptions {
     ///     line_break: LineBreak::Crlf,
     ///     ..Default::default()
-    /// }));
+    /// };
+    /// assert_eq!("\r\n", &print(&doc, &options));
     ///
     /// // There's a `hard_line` call inside a group,
     /// // so the group always breaks even it doesn't exceed the width limitation.
@@ -327,15 +329,17 @@ impl<'a> Doc<'a> {
     ///     Doc::text(")"),
     /// ]).group();
     ///
-    /// assert_eq!("function(\narg,\n)", &print(&doc, &PrintOptions {
+    /// let options = PrintOptions {
     ///     width: 10,
     ///     ..Default::default()
-    /// }));
+    /// };
+    /// assert_eq!("function(\narg,\n)", &print(&doc, &options));
     ///
-    /// assert_eq!("function(arg)", &print(&doc, &PrintOptions {
+    /// let options = PrintOptions {
     ///     width: 20,
     ///     ..Default::default()
-    /// }));
+    /// };
+    /// assert_eq!("function(arg)", &print(&doc, &options));
     ///
     ///
     ///
@@ -348,10 +352,11 @@ impl<'a> Doc<'a> {
     ///     Doc::text(")"),
     /// ]); // <-- no grouping here
     ///
-    /// assert_eq!("function(\narg,\n)", &print(&doc, &PrintOptions {
+    /// let options = PrintOptions {
     ///     width: 20,
     ///     ..Default::default()
-    /// }));
+    /// };
+    /// assert_eq!("function(\narg,\n)", &print(&doc, &options));
     /// ```
     pub fn flat_or_break(doc_flat: Doc<'a>, doc_break: Doc<'a>) -> Doc<'a> {
         Doc::Alt(Rc::new(doc_flat), Rc::new(doc_break))
@@ -412,6 +417,10 @@ impl<'a> Doc<'a> {
     ///     .append(Doc::hard_line())
     ///     .append(Doc::text("}"));
     ///
+    /// let options = PrintOptions {
+    ///     width: 10,
+    ///     ..Default::default()
+    /// };
     /// assert_eq!("fn main() {
     ///     call1(
     ///         very_long_arg,
@@ -421,21 +430,19 @@ impl<'a> Doc<'a> {
     ///             })
     ///         }
     ///     )
-    /// }", &print(&doc, &PrintOptions {
-    ///     width: 10,
-    ///     ..Default::default()
-    /// }));
+    /// }", &print(&doc, &options));
     ///
+    /// let options = PrintOptions {
+    ///     width: 30,
+    ///     ..Default::default()
+    /// };
     /// assert_eq!("fn main() {
     ///     call1(very_long_arg, || {
     ///         call2(|| {
     ///             value
     ///         })
     ///     })
-    /// }", &print(&doc, &PrintOptions {
-    ///     width: 30,
-    ///     ..Default::default()
-    /// }));
+    /// }", &print(&doc, &options));
     /// ```
     pub fn union(self, alternate: Doc<'a>) -> Doc<'a> {
         Doc::Union(Rc::new(self), Rc::new(alternate))

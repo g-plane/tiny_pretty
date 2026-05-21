@@ -16,7 +16,7 @@ type Action<'a, 'b> = (usize, Mode, &'b Doc<'a>);
 /// ## Panics
 ///
 /// Panics if `options.tab_size` is `0`.
-pub fn print<'a>(doc: &'a Doc<'a>, options: &'a PrintOptions) -> String {
+pub fn print<'a>(doc: &Doc<'a>, options: &'a PrintOptions) -> String {
     assert!(options.tab_size > 0);
 
     let mut printer = Printer::new(options);
