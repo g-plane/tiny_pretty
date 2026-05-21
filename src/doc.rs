@@ -37,7 +37,7 @@ pub enum Doc<'a> {
     Break(usize, usize),
 
     #[doc(hidden)]
-    Group(Vec<Doc<'a>>),
+    Group(Cow<'a, [Doc<'a>]>),
 
     #[doc(hidden)]
     List(Vec<Doc<'a>>),
@@ -153,7 +153,7 @@ impl<'a> Doc<'a> {
     /// );
     /// ```
     pub fn soft_line() -> Doc<'a> {
-        Doc::Group(vec![Doc::Break(1, 0)])
+        Doc::Group(vec![Doc::Break(1, 0)].into())
     }
 
     #[inline]
@@ -199,7 +199,7 @@ impl<'a> Doc<'a> {
     #[inline]
     /// Create a slice of docs, similar to [`list`](Doc::list).
     ///
-    /// This won't create a [`Vec`] with allocation, but calling [`append`](Doc::append), [`concat`](Doc::concat) or [`group`](Doc::group) on it will create a [`Vec`].
+    /// This won't create a [`Vec`] with allocation, but calling [`append`](Doc::append) or [`concat`](Doc::concat) on it will create a [`Vec`].
     ///
     /// ```
     /// use tiny_pretty::{print, Doc};
@@ -461,9 +461,10 @@ impl<'a> Doc<'a> {
     /// ```
     pub fn group(self) -> Doc<'a> {
         match self {
-            Doc::List(list) => Doc::Group(list),
+            Doc::List(list) => Doc::Group(list.into()),
+            Doc::Slice(slice) => Doc::Group(slice.into()),
             Doc::Group(..) => self,
-            doc => Doc::Group(vec![doc]),
+            doc => Doc::Group(vec![doc].into()),
         }
     }
 

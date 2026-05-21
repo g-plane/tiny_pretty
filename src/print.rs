@@ -9,14 +9,14 @@ enum Mode {
     Break,
 }
 
-type Action<'a> = (usize, Mode, &'a Doc<'a>);
+type Action<'a, 'b> = (usize, Mode, &'b Doc<'a>);
 
 /// Pretty print a doc.
 ///
 /// ## Panics
 ///
 /// Panics if `options.tab_size` is `0`.
-pub fn print(doc: &Doc, options: &PrintOptions) -> String {
+pub fn print<'a>(doc: &'a Doc<'a>, options: &'a PrintOptions) -> String {
     assert!(options.tab_size > 0);
 
     let mut printer = Printer::new(options);
@@ -35,7 +35,7 @@ impl<'a> Printer<'a> {
         Self { options, cols: 0 }
     }
 
-    fn print_to(&mut self, init_action: Action<'a>, out: &mut String) -> bool {
+    fn print_to<'b>(&mut self, init_action: Action<'a, 'b>, out: &mut String) -> bool {
         let line_break = match self.options.line_break {
             LineBreak::Lf => "\n",
             LineBreak::Crlf => "\r\n",
@@ -156,9 +156,9 @@ impl<'a> Printer<'a> {
 /// it just simply attempts to put the whole group and the rest actions into current line.
 /// After that, if current column is still less than width limitation,
 /// we can feel sure that this group can be put on current line without line breaks.
-fn fitting<'a>(
-    mut actions: Vec<Action<'a>>,
-    mut best_actions: impl Iterator<Item = &'a Action<'a>>,
+fn fitting<'a, 'b>(
+    mut actions: Vec<Action<'a, 'b>>,
+    mut best_actions: impl Iterator<Item = &'b Action<'a, 'b>>,
     mut cols: usize,
     width: usize,
 ) -> bool {
@@ -188,7 +188,10 @@ fn fitting<'a>(
                 return matches!(mode, Mode::Break);
             }
             Doc::EmptyLine => {}
-            Doc::Group(docs) | Doc::List(docs) => {
+            Doc::Group(docs) => {
+                actions.extend(docs.iter().map(|doc| (indent, mode, doc)).rev());
+            }
+            Doc::List(docs) => {
                 actions.extend(docs.iter().map(|doc| (indent, mode, doc)).rev());
             }
             Doc::Slice(docs) => {
