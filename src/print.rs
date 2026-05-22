@@ -86,13 +86,20 @@ impl<'a> Printer<'a> {
                 Doc::NewLine => {
                     self.cols = indent;
                     out.push_str(line_break);
+                    out.reserve(indent);
                     match self.options.indent_kind {
                         IndentKind::Space => {
-                            out.push_str(&" ".repeat(indent));
+                            for _ in 0..indent {
+                                out.push(' ');
+                            }
                         }
                         IndentKind::Tab => {
-                            out.push_str(&"\t".repeat(indent / self.options.tab_size));
-                            out.push_str(&" ".repeat(indent % self.options.tab_size));
+                            for _ in 0..indent / self.options.tab_size {
+                                out.push('\t');
+                            }
+                            for _ in 0..indent % self.options.tab_size {
+                                out.push(' ');
+                            }
                         }
                     }
                     fits &= self.cols <= self.options.width;
@@ -104,18 +111,28 @@ impl<'a> Printer<'a> {
                     match mode {
                         Mode::Flat => {
                             self.cols += spaces;
-                            out.push_str(&" ".repeat(*spaces));
+                            out.reserve(*spaces);
+                            for _ in 0..*spaces {
+                                out.push(' ');
+                            }
                         }
                         Mode::Break => {
                             self.cols = indent + offset;
                             out.push_str(line_break);
+                            out.reserve(self.cols);
                             match self.options.indent_kind {
                                 IndentKind::Space => {
-                                    out.push_str(&" ".repeat(self.cols));
+                                    for _ in 0..self.cols {
+                                        out.push(' ');
+                                    }
                                 }
                                 IndentKind::Tab => {
-                                    out.push_str(&"\t".repeat(self.cols / self.options.tab_size));
-                                    out.push_str(&" ".repeat(self.cols % self.options.tab_size));
+                                    for _ in 0..self.cols / self.options.tab_size {
+                                        out.push('\t');
+                                    }
+                                    for _ in 0..self.cols % self.options.tab_size {
+                                        out.push(' ');
+                                    }
                                 }
                             }
                         }
