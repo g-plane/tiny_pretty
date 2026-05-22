@@ -20,7 +20,7 @@ pub enum Doc<'a> {
     Union(Box<Doc<'a>>, Box<Doc<'a>>),
 
     #[doc(hidden)]
-    Nest(usize, Box<Doc<'a>>),
+    Nest(usize, Nest<'a>),
 
     #[doc(hidden)]
     Text(Cow<'a, str>),
@@ -529,12 +529,20 @@ impl<'a> Doc<'a> {
     /// let doc = Doc::text("code").nest(2);
     /// assert_eq!("code", &print(&doc, &Default::default()));
     /// ```
-    pub fn nest(mut self, size: usize) -> Doc<'a> {
-        if let Doc::Break(_, offset) = &mut self {
-            *offset += size;
-            self
-        } else {
-            Doc::Nest(size, Box::new(self))
+    pub fn nest(self, size: usize) -> Doc<'a> {
+        match self {
+            Doc::Break(a, b) => Doc::Break(a, b + size),
+            Doc::List(list) => Doc::Nest(size, Nest::Vec(list)),
+            Doc::Slice(slice) => Doc::Nest(size, Nest::Slice(slice)),
+            doc => Doc::Nest(size, Nest::Box(Box::new(doc))),
         }
     }
+}
+
+#[derive(Clone, Debug)]
+/// Wrapper type to avoid creating redundant `Box` on `Vec<Doc>` or `&[Doc]`.
+pub enum Nest<'a> {
+    Vec(Vec<Doc<'a>>),
+    Slice(&'a [Doc<'a>]),
+    Box(Box<Doc<'a>>),
 }

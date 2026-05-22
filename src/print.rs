@@ -1,5 +1,6 @@
 use crate::{
-    Doc, IndentKind,
+    IndentKind,
+    doc::{Doc, Nest},
     options::{LineBreak, PrintOptions},
 };
 
@@ -68,9 +69,15 @@ impl<'a> Printer<'a> {
                         actions.push((indent, mode, alternate));
                     }
                 }
-                Doc::Nest(offset, doc) => {
-                    actions.push((indent + offset, mode, doc));
-                }
+                Doc::Nest(offset, nest) => match nest {
+                    Nest::Vec(docs) => {
+                        actions.extend(docs.iter().map(|doc| (indent + offset, mode, doc)).rev());
+                    }
+                    Nest::Slice(docs) => {
+                        actions.extend(docs.iter().map(|doc| (indent + offset, mode, doc)).rev());
+                    }
+                    Nest::Box(doc) => actions.push((indent + offset, mode, &**doc)),
+                },
                 Doc::Text(text) => {
                     self.cols += measure_text_width(text);
                     out.push_str(text);
@@ -172,9 +179,17 @@ fn fitting<'a, 'b>(
                 Mode::Flat => fitting_actions.push((indent, mode, attempt)),
                 Mode::Break => fitting_actions.push((indent, mode, alternate)),
             },
-            Doc::Nest(offset, doc) => {
-                fitting_actions.push((indent + offset, mode, doc));
-            }
+            Doc::Nest(offset, nest) => match nest {
+                Nest::Vec(docs) => {
+                    fitting_actions
+                        .extend(docs.iter().map(|doc| (indent + offset, mode, doc)).rev());
+                }
+                Nest::Slice(docs) => {
+                    fitting_actions
+                        .extend(docs.iter().map(|doc| (indent + offset, mode, doc)).rev());
+                }
+                Nest::Box(doc) => fitting_actions.push((indent + offset, mode, doc)),
+            },
             Doc::Text(text) => {
                 cols += measure_text_width(text);
             }
