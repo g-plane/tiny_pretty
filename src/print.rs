@@ -85,8 +85,8 @@ impl<'a> Printer<'a> {
                 }
                 Doc::NewLine => {
                     self.cols = indent;
+                    out.reserve(indent + 2);
                     out.push_str(line_break);
-                    out.reserve(indent);
                     match self.options.indent_kind {
                         IndentKind::Space => {
                             for _ in 0..indent {
