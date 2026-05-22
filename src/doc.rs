@@ -1,4 +1,4 @@
-use std::{borrow::Cow, rc::Rc};
+use std::borrow::Cow;
 
 #[derive(Clone, Debug)]
 /// The data structure that describes about pretty printing.
@@ -12,15 +12,15 @@ pub enum Doc<'a> {
     #[doc(hidden)]
     /// The first component is for "flat" mode;
     /// the second component is for "break" mode.
-    Alt(Rc<Doc<'a>>, Rc<Doc<'a>>),
+    Alt(Box<Doc<'a>>, Box<Doc<'a>>),
 
     #[doc(hidden)]
     /// Try printing the first doc.
     /// If it exceeds the width limitation, print the second doc.
-    Union(Rc<Doc<'a>>, Rc<Doc<'a>>),
+    Union(Box<Doc<'a>>, Box<Doc<'a>>),
 
     #[doc(hidden)]
-    Nest(usize, Rc<Doc<'a>>),
+    Nest(usize, Box<Doc<'a>>),
 
     #[doc(hidden)]
     Text(Cow<'a, str>),
@@ -359,7 +359,7 @@ impl<'a> Doc<'a> {
     /// assert_eq!("function(\narg,\n)", &print(&doc, &options));
     /// ```
     pub fn flat_or_break(doc_flat: Doc<'a>, doc_break: Doc<'a>) -> Doc<'a> {
-        Doc::Alt(Rc::new(doc_flat), Rc::new(doc_break))
+        Doc::Alt(Box::new(doc_flat), Box::new(doc_break))
     }
 
     #[inline]
@@ -445,7 +445,7 @@ impl<'a> Doc<'a> {
     /// }", &print(&doc, &options));
     /// ```
     pub fn union(self, alternate: Doc<'a>) -> Doc<'a> {
-        Doc::Union(Rc::new(self), Rc::new(alternate))
+        Doc::Union(Box::new(self), Box::new(alternate))
     }
 
     #[inline]
@@ -534,7 +534,7 @@ impl<'a> Doc<'a> {
             *offset += size;
             self
         } else {
-            Doc::Nest(size, Rc::new(self))
+            Doc::Nest(size, Box::new(self))
         }
     }
 }
