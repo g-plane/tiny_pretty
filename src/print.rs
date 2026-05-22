@@ -44,6 +44,7 @@ impl<'a> Printer<'a> {
         let mut actions = Vec::with_capacity(128);
         actions.push(init_action);
 
+        let mut fitting_actions = Vec::with_capacity(128);
         let mut fits = true;
 
         while let Some((indent, mode, doc)) = actions.pop() {
@@ -119,14 +120,11 @@ impl<'a> Printer<'a> {
                         actions.extend(docs.iter().map(|doc| (indent, Mode::Flat, doc)).rev());
                     }
                     Mode::Break => {
-                        let fitting_actions = docs
-                            .iter()
-                            .map(|doc| (indent, Mode::Flat, doc))
-                            .rev()
-                            .collect();
+                        fitting_actions
+                            .extend(docs.iter().map(|doc| (indent, Mode::Flat, doc)).rev());
                         let mode = if fitting(
-                            fitting_actions,
-                            actions.iter().rev(),
+                            &mut fitting_actions,
+                            actions.iter().copied().rev(),
                             self.cols,
                             self.options.width,
                         ) {
@@ -134,6 +132,7 @@ impl<'a> Printer<'a> {
                         } else {
                             Mode::Break
                         };
+                        fitting_actions.clear();
                         actions.extend(docs.iter().map(|doc| (indent, mode, doc)).rev());
                     }
                 },
@@ -157,24 +156,24 @@ impl<'a> Printer<'a> {
 /// After that, if current column is still less than width limitation,
 /// we can feel sure that this group can be put on current line without line breaks.
 fn fitting<'a, 'b>(
-    mut actions: Vec<Action<'a, 'b>>,
-    mut best_actions: impl Iterator<Item = &'b Action<'a, 'b>>,
+    fitting_actions: &mut Vec<Action<'a, 'b>>,
+    mut best_actions: impl Iterator<Item = Action<'a, 'b>>,
     mut cols: usize,
     width: usize,
 ) -> bool {
-    while let Some((indent, mode, doc)) = actions.pop().or_else(|| best_actions.next().copied()) {
+    while let Some((indent, mode, doc)) = fitting_actions.pop().or_else(|| best_actions.next()) {
         match doc {
             Doc::Nil => {}
             Doc::Alt(doc_flat, doc_break) => match mode {
-                Mode::Flat => actions.push((indent, mode, doc_flat)),
-                Mode::Break => actions.push((indent, mode, doc_break)),
+                Mode::Flat => fitting_actions.push((indent, mode, doc_flat)),
+                Mode::Break => fitting_actions.push((indent, mode, doc_break)),
             },
             Doc::Union(attempt, alternate) => match mode {
-                Mode::Flat => actions.push((indent, mode, attempt)),
-                Mode::Break => actions.push((indent, mode, alternate)),
+                Mode::Flat => fitting_actions.push((indent, mode, attempt)),
+                Mode::Break => fitting_actions.push((indent, mode, alternate)),
             },
             Doc::Nest(offset, doc) => {
-                actions.push((indent + offset, mode, doc));
+                fitting_actions.push((indent + offset, mode, doc));
             }
             Doc::Text(text) => {
                 cols += measure_text_width(text);
@@ -189,13 +188,13 @@ fn fitting<'a, 'b>(
             }
             Doc::EmptyLine => {}
             Doc::Group(docs) => {
-                actions.extend(docs.iter().map(|doc| (indent, mode, doc)).rev());
+                fitting_actions.extend(docs.iter().map(|doc| (indent, mode, doc)).rev());
             }
             Doc::List(docs) => {
-                actions.extend(docs.iter().map(|doc| (indent, mode, doc)).rev());
+                fitting_actions.extend(docs.iter().map(|doc| (indent, mode, doc)).rev());
             }
             Doc::Slice(docs) => {
-                actions.extend(docs.iter().map(|doc| (indent, mode, doc)).rev());
+                fitting_actions.extend(docs.iter().map(|doc| (indent, mode, doc)).rev());
             }
         }
         if cols > width {
