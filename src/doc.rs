@@ -155,7 +155,7 @@ impl<'a> Doc<'a> {
     /// );
     /// ```
     pub fn soft_line() -> Doc<'a> {
-        Doc::Group(vec![Doc::Break(1, 0)].into())
+        Doc::Group((&[Doc::Break(1, 0)]).into())
     }
 
     #[inline]
