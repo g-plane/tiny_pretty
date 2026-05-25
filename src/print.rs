@@ -45,7 +45,7 @@ impl<'a> Printer<'a> {
         let mut actions = Vec::with_capacity(128);
         actions.push(init_action);
 
-        let mut fitting_actions = Vec::with_capacity(128);
+        let mut fitting_actions = Vec::with_capacity(64);
         let mut fits = true;
 
         while let Some((indent, mode, doc)) = actions.pop() {
@@ -150,10 +150,10 @@ impl<'a> Printer<'a> {
                         actions.extend(docs.iter().map(|doc| (indent, Mode::Flat, doc)).rev());
                     }
                     Mode::Break => {
-                        fitting_actions
-                            .extend(docs.iter().map(|doc| (indent, Mode::Flat, doc)).rev());
+                        fitting_actions.clear();
                         let mode = if fitting(
                             &mut fitting_actions,
+                            docs.iter().map(|doc| (indent, Mode::Flat, doc)).rev(),
                             actions.iter().copied().rev(),
                             self.cols,
                             self.options.width,
@@ -162,7 +162,6 @@ impl<'a> Printer<'a> {
                         } else {
                             Mode::Break
                         };
-                        fitting_actions.clear();
                         actions.extend(docs.iter().map(|doc| (indent, mode, doc)).rev());
                     }
                 },
@@ -187,11 +186,16 @@ impl<'a> Printer<'a> {
 /// we can feel sure that this group can be put on current line without line breaks.
 fn fitting<'a, 'b>(
     fitting_actions: &mut Vec<Action<'a, 'b>>,
+    mut group_actions: impl Iterator<Item = Action<'a, 'b>>,
     mut best_actions: impl Iterator<Item = Action<'a, 'b>>,
     mut cols: usize,
     width: usize,
 ) -> bool {
-    while let Some((indent, mode, doc)) = fitting_actions.pop().or_else(|| best_actions.next()) {
+    while let Some((indent, mode, doc)) = fitting_actions
+        .pop()
+        .or_else(|| group_actions.next())
+        .or_else(|| best_actions.next())
+    {
         match doc {
             Doc::Nil => {}
             Doc::Alt(doc_flat, doc_break) => match mode {
