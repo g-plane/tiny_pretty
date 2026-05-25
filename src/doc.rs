@@ -180,6 +180,20 @@ impl<'a> Doc<'a> {
     ///         &Default::default(),
     ///     ),
     /// );
+    /// assert_eq!(
+    ///     "long line that may exceed the width limitation\nab",
+    ///     &print(
+    ///         &Doc::text("long line that may exceed the width limitation")
+    ///             .append(Doc::empty_line())
+    ///             .append(
+    ///                 Doc::text("a")
+    ///                     .append(Doc::line_or_nil())
+    ///                     .append(Doc::text("b"))
+    ///                     .group(),
+    ///             ),
+    ///         &PrintOptions { width: 40, ..Default::default() },
+    ///     ),
+    /// );
     /// ```
     pub fn empty_line() -> Doc<'a> {
         Doc::EmptyLine

@@ -106,6 +106,7 @@ impl<'a> Printer<'a> {
                 }
                 Doc::EmptyLine => {
                     out.push_str(line_break);
+                    self.cols = 0;
                 }
                 Doc::Break(spaces, offset) => {
                     match mode {
