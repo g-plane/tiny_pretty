@@ -219,7 +219,7 @@ fn fitting<'a, 'b>(
                 // https://github.com/Marwes/pretty.rs/blob/83021205d557d77731d404cd40b37b105ab762c7/src/render.rs#L381
                 return matches!(mode, Mode::Break);
             }
-            Doc::EmptyLine => {}
+            Doc::EmptyLine => return true,
             Doc::Group(docs) => {
                 fitting_actions.extend(docs.iter().map(|doc| (indent, mode, doc)).rev());
             }
