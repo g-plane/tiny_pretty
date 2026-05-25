@@ -83,6 +83,11 @@ impl<'a> Printer<'a> {
                     out.push_str(text);
                     fits &= self.cols <= self.options.width;
                 }
+                Doc::Char(c) => {
+                    self.cols += c.len_utf8();
+                    out.push(*c);
+                    fits &= self.cols <= self.options.width;
+                }
                 Doc::NewLine => {
                     self.cols = indent;
                     out.reserve(indent + 2);
@@ -210,6 +215,9 @@ fn fitting<'a, 'b>(
             },
             Doc::Text(text) => {
                 cols += measure_text_width(text);
+            }
+            Doc::Char(c) => {
+                cols += c.len_utf8();
             }
             Doc::Break(spaces, _) => match mode {
                 Mode::Flat => cols += spaces,

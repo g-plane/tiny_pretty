@@ -26,6 +26,9 @@ pub enum Doc<'a> {
     Text(Cow<'a, str>),
 
     #[doc(hidden)]
+    Char(char),
+
+    #[doc(hidden)]
     NewLine,
 
     #[doc(hidden)]
@@ -64,6 +67,19 @@ impl<'a> Doc<'a> {
     }
 
     #[inline]
+    /// Insert a single character.
+    ///
+    /// ```
+    /// use tiny_pretty::{print, Doc};
+    ///
+    /// let doc = Doc::char('c');
+    /// assert_eq!("c", &print(&doc, &Default::default()));
+    /// ```
+    pub fn char(c: char) -> Doc<'a> {
+        Doc::Char(c)
+    }
+
+    #[inline]
     /// Empty doc, which does nothing.
     ///
     /// ```
@@ -77,7 +93,7 @@ impl<'a> Doc<'a> {
     }
 
     #[inline]
-    /// Just a space. This is just short for calling [`text`](Doc::text) with a space.
+    /// Just a space. This is just short for calling [`char`](Doc::char) with a space.
     ///
     /// ```
     /// use tiny_pretty::{print, Doc};
@@ -86,7 +102,7 @@ impl<'a> Doc<'a> {
     /// assert_eq!(" ", &print(&doc, &Default::default()));
     /// ```
     pub fn space() -> Doc<'a> {
-        Doc::Text(" ".into())
+        Doc::Char(' ')
     }
 
     #[inline]
