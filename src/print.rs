@@ -60,10 +60,7 @@ impl<'a> Printer<'a> {
 
                     let mut buf = String::new();
                     if self.print_to((indent, mode, attempt), &mut buf) {
-                        // SAFETY: Both are `String`s.
-                        unsafe {
-                            out.as_mut_vec().append(buf.as_mut_vec());
-                        }
+                        out.push_str(&buf);
                     } else {
                         self.cols = original_cols;
                         actions.push((indent, mode, alternate));
