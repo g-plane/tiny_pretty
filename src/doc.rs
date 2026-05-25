@@ -35,9 +35,9 @@ pub enum Doc<'a> {
     EmptyLine,
 
     #[doc(hidden)]
-    /// The first component is the number of spaces if it can be put on a single line;
+    /// The first component is whether a space or nothing will be printed when it can be put on a single line;
     /// the second component is the number of offset if it will be broken into different lines.
-    Break(usize, usize),
+    Break(bool, usize),
 
     #[doc(hidden)]
     Group(Cow<'a, [Doc<'a>]>),
@@ -171,7 +171,7 @@ impl<'a> Doc<'a> {
     /// );
     /// ```
     pub fn soft_line() -> Doc<'a> {
-        Doc::Group((&[Doc::Break(1, 0)]).into())
+        Doc::Group((&[Doc::Break(true, 0)]).into())
     }
 
     #[inline]
@@ -290,7 +290,7 @@ impl<'a> Doc<'a> {
     /// );
     /// ```
     pub fn line_or_space() -> Doc<'a> {
-        Doc::Break(1, 0)
+        Doc::Break(true, 0)
     }
 
     #[inline]
@@ -338,7 +338,7 @@ impl<'a> Doc<'a> {
     /// );
     /// ```
     pub fn line_or_nil() -> Doc<'a> {
-        Doc::Break(0, 0)
+        Doc::Break(false, 0)
     }
 
     #[inline]

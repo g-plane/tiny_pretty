@@ -110,12 +110,11 @@ impl<'a> Printer<'a> {
                     out.push_str(line_break);
                     self.cols = 0;
                 }
-                Doc::Break(spaces, offset) => {
+                Doc::Break(space, offset) => {
                     match mode {
                         Mode::Flat => {
-                            self.cols += spaces;
-                            out.reserve(*spaces);
-                            for _ in 0..*spaces {
+                            if *space {
+                                self.cols += 1;
                                 out.push(' ');
                             }
                         }
@@ -220,8 +219,12 @@ fn fitting<'a, 'b>(
             Doc::Char(c) => {
                 cols += c.len_utf8();
             }
-            Doc::Break(spaces, _) => match mode {
-                Mode::Flat => cols += spaces,
+            Doc::Break(space, _) => match mode {
+                Mode::Flat => {
+                    if *space {
+                        cols += 1;
+                    }
+                }
                 Mode::Break => return true,
             },
             Doc::NewLine => {
