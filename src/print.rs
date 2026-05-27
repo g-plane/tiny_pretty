@@ -10,14 +10,14 @@ enum Mode {
     Break,
 }
 
-type Action<'a, 'b> = (usize, Mode, &'b Doc<'a>);
+type Action<'a, 'b> = (usize, Mode, &'a Doc<'b>);
 
 /// Pretty print a doc.
 ///
 /// ## Panics
 ///
 /// Panics if `options.tab_size` is `0`.
-pub fn print<'a>(doc: &Doc<'a>, options: &'a PrintOptions) -> String {
+pub fn print<'a, 'b>(doc: &'a Doc<'b>, options: &PrintOptions) -> String {
     assert!(options.tab_size > 0);
 
     let mut printer = Printer::new(options);
@@ -26,17 +26,17 @@ pub fn print<'a>(doc: &Doc<'a>, options: &'a PrintOptions) -> String {
     out
 }
 
-struct Printer<'a> {
-    options: &'a PrintOptions,
+struct Printer<'o> {
+    options: &'o PrintOptions,
     cols: usize,
 }
 
-impl<'a> Printer<'a> {
-    fn new(options: &'a PrintOptions) -> Self {
+impl<'o> Printer<'o> {
+    fn new(options: &'o PrintOptions) -> Self {
         Self { options, cols: 0 }
     }
 
-    fn print_to<'b>(&mut self, init_action: Action<'a, 'b>, out: &mut String) -> bool {
+    fn print_to<'a, 'b>(&mut self, init_action: Action<'a, 'b>, out: &mut String) -> bool {
         let line_break = match self.options.line_break {
             LineBreak::Lf => "\n",
             LineBreak::Crlf => "\r\n",
