@@ -16,6 +16,7 @@ For tutorial and API documentation, please refer to [docs.rs](https://docs.rs/ti
 - [Pretty YAML](https://github.com/g-plane/pretty_yaml)
 - [Pretty GraphQL](https://github.com/g-plane/pretty_graphql)
 - [Pretty Jinja](https://github.com/g-plane/pretty_jinja)
+- [squawk](https://github.com/sbdchd/squawk)
 
 ## Credits
 
