@@ -40,6 +40,7 @@ impl<'o> Printer<'o> {
         let line_break = match self.options.line_break {
             LineBreak::Lf => "\n",
             LineBreak::Crlf => "\r\n",
+            LineBreak::Cr => "\r",
         };
 
         let mut actions = Vec::with_capacity(128);

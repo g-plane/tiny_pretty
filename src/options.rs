@@ -3,6 +3,7 @@ pub enum LineBreak {
     #[default]
     Lf,
     Crlf,
+    Cr,
 }
 
 #[derive(Clone, Debug, Default)]
@@ -15,7 +16,7 @@ pub enum IndentKind {
 #[derive(Clone, Debug)]
 /// Print control options, such as line break and indentation kind.
 pub struct PrintOptions {
-    /// Line break for each line. It can be "\n" (LF) or "\r\n" (CRLF).
+    /// Line break for each line. It can be "\n" (LF), "\r\n" (CRLF), or "\r" (CR).
     ///
     /// Default value is LF.
     ///
@@ -35,6 +36,12 @@ pub struct PrintOptions {
     ///     ..Default::default()
     /// };
     /// assert_eq!("a\r\nb", &print(&doc, &options));
+    ///
+    /// let options = PrintOptions {
+    ///     line_break: LineBreak::Cr,
+    ///     ..Default::default()
+    /// };
+    /// assert_eq!("a\rb", &print(&doc, &options));
     /// ```
     pub line_break: LineBreak,
 
