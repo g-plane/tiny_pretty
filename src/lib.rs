@@ -175,6 +175,6 @@ mod doc;
 mod options;
 mod print;
 
-pub use doc::Doc;
+pub use doc::{Doc, Nest};
 pub use options::*;
 pub use print::print;
