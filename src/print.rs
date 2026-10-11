@@ -257,5 +257,9 @@ fn measure_text_width(text: &str) -> usize {
 #[cfg(feature = "unicode-width")]
 fn measure_text_width(text: &str) -> usize {
     use unicode_width::UnicodeWidthStr;
-    text.width()
+    if text.is_ascii() {
+        text.len()
+    } else {
+        text.width()
+    }
 }
