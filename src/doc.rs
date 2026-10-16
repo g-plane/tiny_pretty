@@ -515,16 +515,28 @@ impl<'a> Doc<'a> {
     /// assert_eq!("abc", &print(&doc, &Default::default()));
     /// ```
     pub fn append(self, other: Doc<'a>) -> Doc<'a> {
-        let mut current = if let Doc::List(docs) = self {
-            docs
-        } else {
-            vec![self]
-        };
-        match other {
-            Doc::List(mut docs) => current.append(&mut docs),
-            _ => current.push(other),
+        match (self, other) {
+            (Doc::Nil, other) => other,
+            (this, Doc::Nil) => this,
+            (Doc::List(mut docs), Doc::List(mut other)) => {
+                docs.append(&mut other);
+                Doc::List(docs)
+            }
+            (Doc::List(mut docs), other) => {
+                docs.push(other);
+                Doc::List(docs)
+            }
+            (this, Doc::List(mut docs)) => {
+                docs.insert(0, this);
+                Doc::List(docs)
+            }
+            (this, other) => {
+                let mut docs = Vec::with_capacity(4);
+                docs.push(this);
+                docs.push(other);
+                Doc::List(docs)
+            }
         }
-        Doc::List(current)
     }
 
     #[inline]
